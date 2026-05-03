@@ -1,12 +1,19 @@
 #include "raylib.h"
 #include "../Cinema_Design/design.h"
+#include "../Cinema_Design/tickets.h"
 
-#include "raylib.h"
+enum Screen {
+    MENU = 0,
+    TICKETS = 1
+};
 
 int main() {
     const int screenWidth = 800;
     const int screenHeight = 600;
-    InitWindow(screenWidth, screenHeight, "Cinema Paradise - Main Menu");
+
+    InitWindow(screenWidth, screenHeight, "Cinema Menu Test");
+
+    int currentScreen = MENU;
 
     Rectangle btnTickets = { screenWidth / 2 - 100, 250, 200, 50 };
     Rectangle btnMovies = { screenWidth / 2 - 100, 320, 200, 50 };
@@ -15,37 +22,50 @@ int main() {
     SetTargetFPS(60);
 
     while (!WindowShouldClose()) {
-        Vector2 mousePoint = GetMousePosition();
+        Vector2 mouse = GetMousePosition();
 
-        if (CheckCollisionPointRec(mousePoint, btnTickets) ||
-            CheckCollisionPointRec(mousePoint, btnMovies) ||
-            CheckCollisionPointRec(mousePoint, btnExit)) {
+        bool hoverTickets = CheckCollisionPointRec(mouse, btnTickets);
+        bool hoverMovies = CheckCollisionPointRec(mouse, btnMovies);
+        bool hoverExit = CheckCollisionPointRec(mouse, btnExit);
+
+        if (hoverTickets || hoverMovies || hoverExit)
             SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
-        }
-        else {
+        else
             SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+
+        if (hoverTickets && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            currentScreen = TICKETS;
         }
 
-        if (CheckCollisionPointRec(mousePoint, btnExit) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        if (hoverExit && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
             break;
         }
 
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
-        DrawText("CINEMA PARADISE", screenWidth / 2 - MeasureText("CINEMA PARADISE", 40) / 2, 100, 40, MAROON);
-        DrawText("Please select an option:", screenWidth / 2 - MeasureText("Please select an option:", 20) / 2, 160, 20, DARKGRAY);
+        if (currentScreen == TICKETS) {
+            DrawTicketsPage();
 
-        DrawRectangleRec(btnTickets, CheckCollisionPointRec(mousePoint, btnTickets) ? LIGHTGRAY : GRAY);
+            if (IsKeyPressed(KEY_BACKSPACE)) {
+                currentScreen = MENU;
+            }
+
+            EndDrawing();
+            continue;
+        }
+
+        DrawText("CINEMA MENU", screenWidth / 2 - MeasureText("CINEMA MENU", 40) / 2, 120, 40, MAROON);
+
+        DrawRectangleRec(btnTickets, hoverTickets ? LIGHTGRAY : GRAY);
         DrawText("TICKETS", btnTickets.x + 55, btnTickets.y + 15, 20, WHITE);
 
-        DrawRectangleRec(btnMovies, CheckCollisionPointRec(mousePoint, btnMovies) ? LIGHTGRAY : GRAY);
+        DrawRectangleRec(btnMovies, hoverMovies ? LIGHTGRAY : GRAY);
         DrawText("MOVIES", btnMovies.x + 60, btnMovies.y + 15, 20, WHITE);
 
-        DrawRectangleRec(btnExit, CheckCollisionPointRec(mousePoint, btnExit) ? RED : MAROON);
+        DrawRectangleRec(btnExit, hoverExit ? RED : MAROON);
         DrawText("EXIT", btnExit.x + 75, btnExit.y + 15, 20, WHITE);
 
-        DrawText("v1.0", 10, screenHeight - 20, 10, GRAY);
         EndDrawing();
     }
 
