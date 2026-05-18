@@ -130,11 +130,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="app.cpp" />
     <ClCompile Include="Design.cpp" />
+    <ClCompile Include="login.cpp" />
+    <ClCompile Include="menu.cpp" />
     <ClCompile Include="tickets.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="app.h" />
     <ClInclude Include="design.h" />
+    <ClInclude Include="login.h" />
+    <ClInclude Include="menu.h" />
     <ClInclude Include="tickets.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
