@@ -18,6 +18,27 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\models.cpp" />
+    <ClCompile Include="src\app.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\screens\login.cpp" />
+    <ClCompile Include="src\screens\menu.cpp" />
+    <ClCompile Include="src\screens\movies.cpp" />
+    <ClCompile Include="src\screens\payment.cpp" />
+    <ClCompile Include="src\screens\showtimes.cpp" />
+    <ClCompile Include="src\screens\tickets.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\models.h" />
+    <ClInclude Include="include\app.h" />
+    <ClInclude Include="include\screens\login.h" />
+    <ClInclude Include="include\screens\menu.h" />
+    <ClInclude Include="include\screens\movies.h" />
+    <ClInclude Include="include\screens\payment.h" />
+    <ClInclude Include="include\screens\showtimes.h" />
+    <ClInclude Include="include\screens\tickets.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -29,26 +50,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -105,7 +126,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\external\raylib-5.5_win64_msvc16\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;include\screens;src;..\external\raylib-5.5_win64_msvc16\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -129,20 +150,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="app.cpp" />
-    <ClCompile Include="Design.cpp" />
-    <ClCompile Include="login.cpp" />
-    <ClCompile Include="menu.cpp" />
-    <ClCompile Include="tickets.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="app.h" />
-    <ClInclude Include="design.h" />
-    <ClInclude Include="login.h" />
-    <ClInclude Include="menu.h" />
-    <ClInclude Include="tickets.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
