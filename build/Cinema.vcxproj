@@ -95,9 +95,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\main.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Cinema_Design\Cinema_Design.vcxproj">
       <Project>{56317e3f-6619-477a-9777-6c145e945174}</Project>
     </ProjectReference>
