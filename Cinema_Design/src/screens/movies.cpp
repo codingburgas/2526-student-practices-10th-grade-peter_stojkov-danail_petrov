@@ -519,16 +519,16 @@ void MoviesScreen::Update(bool& goBack, bool& movieSelected) {
             float formX = screenWidth / 2.0f - 260.0f;
             float formY = 120.0f;
             Rectangle fields[] = {
-                { formX, formY + 55, 520, 38 },
-                { formX, formY + 105, 250, 38 },
-                { formX + 270, formY + 105, 250, 38 },
-                { formX, formY + 155, 250, 38 },
-                { formX + 270, formY + 155, 250, 38 },
-                { formX, formY + 205, 520, 38 },
-                { formX, formY + 255, 520, 38 }
+                { formX, formY + 70, 520, 38 },
+                { formX, formY + 135, 250, 38 },
+                { formX + 270, formY + 135, 250, 38 },
+                { formX, formY + 200, 250, 38 },
+                { formX + 270, formY + 200, 250, 38 },
+                { formX, formY + 265, 520, 38 },
+                { formX, formY + 330, 520, 38 }
             };
-            saveMovieBtn = { formX + 290, formY + 315, 110, 40 };
-            cancelAddBtn = { formX + 410, formY + 315, 110, 40 };
+            saveMovieBtn = { formX + 290, formY + 390, 110, 40 };
+            cancelAddBtn = { formX + 410, formY + 390, 110, 40 };
 
             activeAdminField = -1;
             for (int i = 0; i < 7; i++) {
@@ -845,7 +845,7 @@ void MoviesScreen::Draw() {
 
         float formX = screenWidth / 2.0f - 260.0f;
         float formY = 120.0f;
-        Rectangle form = { formX - 30, formY - 30, 580, 420 };
+        Rectangle form = { formX - 30, formY - 30, 580, 500 };
         DrawRectangleRounded(form, 0.06f, 8, GetTheme().cardBg);
         DrawRectangleRoundedLines(form, 0.06f, 8, BORDER_COLOR);
 
@@ -853,13 +853,13 @@ void MoviesScreen::Draw() {
         DrawMovieText(TextFor("Required: title, language, genre, duration"), formX, formY + 28, 15, SUBTEXT_COLOR);
 
         Rectangle fields[] = {
-            { formX, formY + 55, 520, 38 },
-            { formX, formY + 105, 250, 38 },
-            { formX + 270, formY + 105, 250, 38 },
-            { formX, formY + 155, 250, 38 },
-            { formX + 270, formY + 155, 250, 38 },
-            { formX, formY + 205, 520, 38 },
-            { formX, formY + 255, 520, 38 }
+            { formX, formY + 70, 520, 38 },
+            { formX, formY + 135, 250, 38 },
+            { formX + 270, formY + 135, 250, 38 },
+            { formX, formY + 200, 250, 38 },
+            { formX + 270, formY + 200, 250, 38 },
+            { formX, formY + 265, 520, 38 },
+            { formX, formY + 330, 520, 38 }
         };
 
         DrawAdminField(fields[0], TextFor("Title"), newTitle, activeAdminField == 0);
@@ -870,8 +870,8 @@ void MoviesScreen::Draw() {
         DrawAdminField(fields[5], "Poster path", newPosterPath, activeAdminField == 5);
         DrawAdminField(fields[6], "Description", newDescription, activeAdminField == 6);
 
-        saveMovieBtn = { formX + 290, formY + 315, 110, 40 };
-        cancelAddBtn = { formX + 410, formY + 315, 110, 40 };
+        saveMovieBtn = { formX + 290, formY + 390, 110, 40 };
+        cancelAddBtn = { formX + 410, formY + 390, 110, 40 };
 
         bool canSave = !Trim(newTitle).empty() && !Trim(newLanguage).empty() &&
             !Trim(newGenre).empty() && !Trim(newDuration).empty();
@@ -884,7 +884,7 @@ void MoviesScreen::Draw() {
         DrawMovieText(TextFor("CANCEL"), cancelAddBtn.x + 14, cancelAddBtn.y + 11, 17, cancelHover ? WHITE : TITLE_COLOR);
 
         if (!addMovieMessage.empty()) {
-            DrawMovieText(TextFor(addMovieMessage.c_str()), formX, formY + 368, 15, PINK_ACC);
+            DrawMovieText(TextFor(addMovieMessage.c_str()), formX, formY + 448, 15, PINK_ACC);
         }
     }
 }
