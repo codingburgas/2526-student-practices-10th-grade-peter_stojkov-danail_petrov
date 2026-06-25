@@ -48,6 +48,29 @@ static bool TryParsePositiveInt(const std::string& value, int& result) {
     return result > 0;
 }
 
+static bool ContainsOption(const std::vector<std::string>& options, const std::string& value) {
+    return std::find(options.begin(), options.end(), value) != options.end();
+}
+
+static int ExtractReleaseYear(const std::string& value) {
+    if (value.size() < 4) {
+        return 0;
+    }
+
+    std::string yearText = value.substr(0, 4);
+    for (char ch : yearText) {
+        if (!std::isdigit((unsigned char)ch)) {
+            return 0;
+        }
+    }
+
+    try {
+        return std::stoi(yearText);
+    } catch (...) {
+        return 0;
+    }
+}
+
 static Color DARK_BG       = { 15, 23, 42, 255 };
 static Color CARD_COLOR    = { 30, 41, 59, 255 };
 static Color BORDER_COLOR  = { 51, 65, 85, 255 };
@@ -207,13 +230,16 @@ static void DrawAdminField(Rectangle bounds, const char* label, const std::strin
 MoviesScreen::MoviesScreen(int w, int h)
     : screenWidth(w), screenHeight(h), scrollOffset(0.0f),
     typingSearch(false), postersLoaded(false), isAdmin(false),
-    showingAddForm(false), activeAdminField(-1)
+    showingAddForm(false), activeAdminField(-1),
+    selectedGenreIndex(0), selectedLanguageIndex(0), sortMode(0)
 {
     searchBox = { 60, 130, 320, 38 };
     addMovieBtn = { (float)screenWidth - 500, 22, 118, 36 };
     saveMovieBtn = { 0, 0, 120, 40 };
     cancelAddBtn = { 0, 0, 100, 40 };
     LoadMovies();
+    RebuildFilterOptions();
+    ApplyMovieFilters();
 }
 
 void MoviesScreen::LoadMovies() {
@@ -314,6 +340,91 @@ void MoviesScreen::LoadPosterTextures() {
     postersLoaded = true;
 }
 
+void MoviesScreen::RebuildFilterOptions() {
+    std::string selectedGenre = selectedGenreIndex >= 0 && selectedGenreIndex < (int)genreOptions.size()
+        ? genreOptions[selectedGenreIndex]
+        : "All";
+    std::string selectedLanguage = selectedLanguageIndex >= 0 && selectedLanguageIndex < (int)languageOptions.size()
+        ? languageOptions[selectedLanguageIndex]
+        : "All";
+
+    genreOptions.clear();
+    languageOptions.clear();
+    genreOptions.push_back("All");
+    languageOptions.push_back("All");
+
+    for (const Movie& movie : movies) {
+        if (!movie.genre.empty() && !ContainsOption(genreOptions, movie.genre)) {
+            genreOptions.push_back(movie.genre);
+        }
+        if (!movie.language.empty() && !ContainsOption(languageOptions, movie.language)) {
+            languageOptions.push_back(movie.language);
+        }
+    }
+
+    std::sort(genreOptions.begin() + 1, genreOptions.end());
+    std::sort(languageOptions.begin() + 1, languageOptions.end());
+
+    selectedGenreIndex = 0;
+    selectedLanguageIndex = 0;
+    for (int i = 0; i < (int)genreOptions.size(); i++) {
+        if (genreOptions[i] == selectedGenre) {
+            selectedGenreIndex = i;
+        }
+    }
+    for (int i = 0; i < (int)languageOptions.size(); i++) {
+        if (languageOptions[i] == selectedLanguage) {
+            selectedLanguageIndex = i;
+        }
+    }
+}
+
+void MoviesScreen::ApplyMovieFilters() {
+    filteredMovies.clear();
+    std::string searchLower = toLower(searchText);
+    std::string selectedGenre = selectedGenreIndex >= 0 && selectedGenreIndex < (int)genreOptions.size()
+        ? genreOptions[selectedGenreIndex]
+        : "All";
+    std::string selectedLanguage = selectedLanguageIndex >= 0 && selectedLanguageIndex < (int)languageOptions.size()
+        ? languageOptions[selectedLanguageIndex]
+        : "All";
+
+    for (const Movie& movie : movies) {
+        bool matchesSearch = searchLower.empty();
+        if (!matchesSearch) {
+            std::string titleLower = toLower(movie.title);
+            std::string languageLower = toLower(movie.language);
+            std::string genreLower = toLower(movie.genre);
+            std::string releaseLower = toLower(movie.releaseDate);
+            matchesSearch =
+                titleLower.find(searchLower) != std::string::npos ||
+                languageLower.find(searchLower) != std::string::npos ||
+                genreLower.find(searchLower) != std::string::npos ||
+                releaseLower.find(searchLower) != std::string::npos;
+        }
+
+        bool matchesGenre = selectedGenre == "All" || movie.genre == selectedGenre;
+        bool matchesLanguage = selectedLanguage == "All" || movie.language == selectedLanguage;
+        if (matchesSearch && matchesGenre && matchesLanguage) {
+            filteredMovies.push_back(movie);
+        }
+    }
+
+    if (sortMode == 0) {
+        std::sort(filteredMovies.begin(), filteredMovies.end(), [](const Movie& a, const Movie& b) {
+            return toLower(a.title) < toLower(b.title);
+        });
+    } else if (sortMode == 1) {
+        std::sort(filteredMovies.begin(), filteredMovies.end(), [](const Movie& a, const Movie& b) {
+            return a.duration < b.duration;
+        });
+    } else {
+        std::sort(filteredMovies.begin(), filteredMovies.end(), [](const Movie& a, const Movie& b) {
+            return ExtractReleaseYear(a.releaseDate) > ExtractReleaseYear(b.releaseDate);
+        });
+    }
+}
+
 bool MoviesScreen::TryAddMovie() {
     int duration = 0;
 
@@ -338,6 +449,7 @@ bool MoviesScreen::TryAddMovie() {
         duration
     });
     SaveMovies();
+    RebuildFilterOptions();
     postersLoaded = false;
     posterTextures.clear();
     newTitle.clear();
@@ -348,7 +460,7 @@ bool MoviesScreen::TryAddMovie() {
     newDuration.clear();
     newPosterPath.clear();
     searchText.clear();
-    filteredMovies.clear();
+    ApplyMovieFilters();
     showingAddForm = false;
     activeAdminField = -1;
     addMovieMessage.clear();
@@ -363,6 +475,10 @@ void MoviesScreen::Update(bool& goBack, bool& movieSelected) {
 
     Rectangle searchArea = { (float)screenWidth - 360, 18, 220, 44 };
     Rectangle themeBtn = { (float)screenWidth - 118, 18, 58, 44 };
+    Rectangle genreBtn = { 50.0f, 104.0f, 150.0f, 34.0f };
+    Rectangle languageBtn = { 214.0f, 104.0f, 170.0f, 34.0f };
+    Rectangle sortBtn = { 398.0f, 104.0f, 170.0f, 34.0f };
+    Rectangle clearFiltersBtn = { 582.0f, 104.0f, 92.0f, 34.0f };
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         if (CheckCollisionPointRec(mouse, themeBtn)) {
             ToggleTheme();
@@ -408,6 +524,38 @@ void MoviesScreen::Update(bool& goBack, bool& movieSelected) {
                 TryAddMovie();
             }
 
+            return;
+        }
+
+        if (!showingAddForm && CheckCollisionPointRec(mouse, genreBtn)) {
+            selectedGenreIndex = genreOptions.empty() ? 0 : (selectedGenreIndex + 1) % (int)genreOptions.size();
+            scrollOffset = 0.0f;
+            ApplyMovieFilters();
+            return;
+        }
+
+        if (!showingAddForm && CheckCollisionPointRec(mouse, languageBtn)) {
+            selectedLanguageIndex = languageOptions.empty() ? 0 : (selectedLanguageIndex + 1) % (int)languageOptions.size();
+            scrollOffset = 0.0f;
+            ApplyMovieFilters();
+            return;
+        }
+
+        if (!showingAddForm && CheckCollisionPointRec(mouse, sortBtn)) {
+            sortMode = (sortMode + 1) % 3;
+            scrollOffset = 0.0f;
+            ApplyMovieFilters();
+            return;
+        }
+
+        if (!showingAddForm && CheckCollisionPointRec(mouse, clearFiltersBtn)) {
+            selectedGenreIndex = 0;
+            selectedLanguageIndex = 0;
+            sortMode = 0;
+            searchText.clear();
+            typingSearch = false;
+            scrollOffset = 0.0f;
+            ApplyMovieFilters();
             return;
         }
 
@@ -467,28 +615,16 @@ void MoviesScreen::Update(bool& goBack, bool& movieSelected) {
         }
 
         if (changed) {
-            filteredMovies.clear();
-            std::string searchLower = toLower(searchText);
-            for (auto& m : movies) {
-                std::string titleLower = toLower(m.title);
-                std::string languageLower = toLower(m.language);
-                std::string genreLower = toLower(m.genre);
-                std::string releaseLower = toLower(m.releaseDate);
-                if (titleLower.find(searchLower) != std::string::npos ||
-                    languageLower.find(searchLower) != std::string::npos ||
-                    genreLower.find(searchLower) != std::string::npos ||
-                    releaseLower.find(searchLower) != std::string::npos) {
-                    filteredMovies.push_back(m);
-                }
-            }
+            scrollOffset = 0.0f;
+            ApplyMovieFilters();
         }
     }
 
     if (IsKeyPressed(KEY_BACKSPACE) && (!typingSearch || searchText.empty()))
         goBack = true;
 
-    int y = 130 - (int)scrollOffset;
-    auto& list = searchText.empty() ? movies : filteredMovies;
+    int y = 160 - (int)scrollOffset;
+    auto& list = filteredMovies;
 
     for (auto& m : list) {
         Rectangle card = { 50, (float)y, (float)screenWidth - 100, (float)cardHeight };
@@ -500,8 +636,9 @@ void MoviesScreen::Update(bool& goBack, bool& movieSelected) {
                 return movie.title == m.title;
             }), movies.end());
             SaveMovies();
+            RebuildFilterOptions();
             searchText.clear();
-            filteredMovies.clear();
+            ApplyMovieFilters();
             postersLoaded = false;
             posterTextures.clear();
             break;
@@ -525,8 +662,8 @@ void MoviesScreen::Draw() {
     ApplyMoviesTheme();
     LoadPosterTextures();
 
-    int y = 130 - (int)scrollOffset;
-    auto& list = searchText.empty() ? movies : filteredMovies;
+    int y = 160 - (int)scrollOffset;
+    auto& list = filteredMovies;
 
     for (int i = 0; i < (int)list.size(); i++) {
         auto& m = list[i];
@@ -589,10 +726,17 @@ void MoviesScreen::Draw() {
         y += cardHeight + 16;
     }
 
-    DrawRectangle(0, 0, screenWidth, 90, DARK_BG);
+    if (list.empty()) {
+        const char* emptyText = "No movies match these filters.";
+        Vector2 emptySize = MeasureMovieText(emptyText, 24);
+        DrawMovieText(emptyText, (screenWidth - emptySize.x) / 2.0f, 260.0f, 24, SUBTEXT_COLOR);
+    }
+
+    DrawRectangle(0, 0, screenWidth, 150, DARK_BG);
 
     float lineAlpha = 60.0f;
     DrawLine(0, 90, screenWidth, 90, Color{0, 240, 255, (unsigned char)lineAlpha});
+    DrawLine(0, 150, screenWidth, 150, Color{0, 240, 255, (unsigned char)(lineAlpha * 0.65f)});
 
     DrawMovieText("MOVIES", 50, 18, 34, TITLE_COLOR);
     DrawMovieText(isAdmin ? "Admin mode: add or delete movies" : "Press BACKSPACE to return", 50, 58, 15, SUBTEXT_COLOR);
@@ -602,6 +746,37 @@ void MoviesScreen::Draw() {
         DrawRectangleRounded(addMovieBtn, 0.35f, 8, addHover ? Color{0, 200, 220, 255} : ACCENT_COLOR);
         DrawMovieText("ADD MOVIE", addMovieBtn.x + 13, addMovieBtn.y + 9, 16, DARK_BG);
     }
+
+    Rectangle genreBtn = { 50.0f, 104.0f, 150.0f, 34.0f };
+    Rectangle languageBtn = { 214.0f, 104.0f, 170.0f, 34.0f };
+    Rectangle sortBtn = { 398.0f, 104.0f, 170.0f, 34.0f };
+    Rectangle clearFiltersBtn = { 582.0f, 104.0f, 92.0f, 34.0f };
+
+    auto drawFilterButton = [](Rectangle bounds, const std::string& text, bool active) {
+        bool hovered = CheckCollisionPointRec(GetMousePosition(), bounds);
+        DrawRectangleRounded(bounds, 0.35f, 8, hovered || active ? ACCENT_COLOR : CARD_COLOR);
+        DrawRectangleRoundedLines(bounds, 0.35f, 8, hovered || active ? ACCENT_COLOR : BORDER_COLOR);
+        Vector2 textSize = MeasureMovieText(text, 14);
+        DrawMovieText(
+            text,
+            bounds.x + (bounds.width - textSize.x) / 2.0f,
+            bounds.y + 9.0f,
+            14,
+            hovered || active ? DARK_BG : TITLE_COLOR
+        );
+    };
+
+    std::string genreValue = selectedGenreIndex >= 0 && selectedGenreIndex < (int)genreOptions.size()
+        ? genreOptions[selectedGenreIndex]
+        : "All";
+    std::string languageValue = selectedLanguageIndex >= 0 && selectedLanguageIndex < (int)languageOptions.size()
+        ? languageOptions[selectedLanguageIndex]
+        : "All";
+    const char* sortLabels[] = { "Title", "Duration", "Newest" };
+    drawFilterButton(genreBtn, "Genre: " + genreValue, selectedGenreIndex > 0);
+    drawFilterButton(languageBtn, "Language: " + languageValue, selectedLanguageIndex > 0);
+    drawFilterButton(sortBtn, std::string("Sort: ") + sortLabels[sortMode], sortMode != 0);
+    drawFilterButton(clearFiltersBtn, "Clear", selectedGenreIndex > 0 || selectedLanguageIndex > 0 || sortMode != 0 || !searchText.empty());
 
     Rectangle searchArea = { (float)screenWidth - 360, 18, 220, 44 };
     DrawRectangleRounded(searchArea, 0.5f, 8, CARD_COLOR);

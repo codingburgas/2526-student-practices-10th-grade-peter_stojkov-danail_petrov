@@ -26,6 +26,8 @@ public:
 
 private:
     bool TryAddMovie();
+    void RebuildFilterOptions();
+    void ApplyMovieFilters();
 
     int screenWidth;
     int screenHeight;
@@ -33,6 +35,8 @@ private:
     std::vector<Movie> movies;
     std::vector<Movie> filteredMovies;
     std::vector<Texture2D> posterTextures;
+    std::vector<std::string> genreOptions;
+    std::vector<std::string> languageOptions;
 
     std::string searchText;
     std::string selectedMovieTitle;
@@ -50,6 +54,9 @@ private:
     bool isAdmin;
     bool showingAddForm;
     int activeAdminField;
+    int selectedGenreIndex;
+    int selectedLanguageIndex;
+    int sortMode;
     Rectangle searchBox;
     Rectangle addMovieBtn;
     Rectangle saveMovieBtn;
