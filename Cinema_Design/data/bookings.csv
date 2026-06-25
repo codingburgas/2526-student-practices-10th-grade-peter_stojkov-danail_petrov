@@ -3,3 +3,5 @@ timestamp,username,show,seats,seat_count,total_amount,payment_method,channel,sta
 2026-06-24 22:17:46,Tqnata,Inception | Cinema City Paradise | Hall 1 | Today 18:30,R1C3 R1C6,2,0,credit_card,online,confirmed
 2026-06-24 22:40:22,Tqnata,Inception | Cinema City Paradise | Hall 1 | Today 18:30,R1C4 R1C5,2,0,credit_card,online,confirmed
 2026-06-24 22:40:38,Tqnata,Interstellar | Arena Mall | Hall 3 | Today 20:45,R8C6,1,0,credit_card,online,confirmed
+2026-06-25 16:01:59,Tqnata,Inception | Cinema City | Hall 4 | Tomorrow 21:00,R1C5 R1C6,2,0,credit_card,online,confirmed
+2026-06-25 18:16:18,Tqnata,Inception | Cinema City Paradise | Hall 1 | Today 18:30,R1C5 R1C6,2,40,cash,walk_in,confirmed

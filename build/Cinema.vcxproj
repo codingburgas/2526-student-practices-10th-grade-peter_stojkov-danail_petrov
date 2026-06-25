@@ -22,7 +22,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -46,6 +46,8 @@
     <IntDir>$(ProjectDir)..\bin-int\Debug-windows-x86_64\</IntDir>
     <TargetName>Cinema</TargetName>
     <TargetExt>.exe</TargetExt>
+    <LocalDebuggerCommand>$(SolutionDir)x64\Debug\Cinema_Design.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>$(SolutionDir)Cinema_Design\</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -53,6 +55,8 @@
     <IntDir>$(ProjectDir)..\bin-int\Release-windows-x86_64\</IntDir>
     <TargetName>Cinema</TargetName>
     <TargetExt>.exe</TargetExt>
+    <LocalDebuggerCommand>$(SolutionDir)x64\Debug\Cinema_Design.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>$(SolutionDir)Cinema_Design\</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>

@@ -8,7 +8,9 @@ public:
 
     void Update(bool& loggedIn);
     void Draw();
+    void Reset();
     const std::string& GetUsername() const;
+    bool IsAdmin() const;
 
 private:
     bool LoginUser();
@@ -25,6 +27,7 @@ private:
 
     bool typingUser;
     bool typingPass;
+    bool isAdmin;
 
     std::string username;
     std::string password;

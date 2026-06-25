@@ -4,6 +4,8 @@
 enum class MenuResult {
     NONE,
     OPEN_MOVIES,
+    OPEN_MY_BOOKINGS,
+    LOG_OUT,
     EXIT_APP
 };
 
@@ -18,8 +20,14 @@ private:
     int screenHeight;
 
     Rectangle btnMovies;
+    Rectangle btnMyBookings;
     Rectangle btnExit;
+    Rectangle btnTheme;
+    Rectangle btnLogout;
 
     bool hoverMovies;
+    bool hoverMyBookings;
     bool hoverExit;
+    bool hoverTheme;
+    bool hoverLogout;
 };

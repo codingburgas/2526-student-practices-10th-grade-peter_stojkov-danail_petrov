@@ -1,4 +1,5 @@
 #include "showtimes.h"
+#include "theme.h"
 #include <string>
 
 static Color DARK_BG       = { 15, 23, 42, 255 };
@@ -9,6 +10,18 @@ static Color SUBTEXT_COLOR = { 148, 163, 184, 255 };
 static Color ACCENT_COLOR  = { 0, 240, 255, 255 };
 static Color PINK_ACC      = { 255, 42, 109, 255 };
 static Color CARD_HOVER    = { 40, 55, 80, 255 };
+
+static void ApplyShowtimesTheme() {
+    const ThemePalette& theme = GetTheme();
+    DARK_BG = theme.background;
+    CARD_COLOR = theme.card;
+    BORDER_COLOR = theme.border;
+    TITLE_COLOR = theme.text;
+    SUBTEXT_COLOR = theme.textDim;
+    ACCENT_COLOR = theme.accent;
+    PINK_ACC = theme.pink;
+    CARD_HOVER = theme.cardHover;
+}
 
 ShowtimesScreen::ShowtimesScreen(int w, int h)
     : screenWidth(w), screenHeight(h), bookingChannel(BookingChannel::Online)
@@ -35,10 +48,10 @@ void ShowtimesScreen::LoadDemoShows() {
         { "Cinema City", "Varna", "Hall 4", "Tomorrow 21:00", {} }
     };
 
-    float y = 165.0f;
+    float y = 175.0f;
     for (auto& show : shows) {
-        show.bounds = { 50.0f, y, (float)screenWidth - 100.0f, 78.0f };
-        y += 94.0f;
+        show.bounds = { 50.0f, y, (float)screenWidth - 100.0f, 90.0f };
+        y += 108.0f;
     }
 }
 
@@ -69,6 +82,8 @@ void ShowtimesScreen::Update(bool& goBack, bool& showSelected) {
 }
 
 void ShowtimesScreen::Draw() {
+    ApplyShowtimesTheme();
+
     DrawText("SHOWTIMES", 50, 20, 32, TITLE_COLOR);
     DrawText(movieTitle.c_str(), 50, 58, 18, ACCENT_COLOR);
     DrawText("BACKSPACE to return", screenWidth - 190, 28, 14, SUBTEXT_COLOR);
@@ -93,13 +108,13 @@ void ShowtimesScreen::Draw() {
         DrawRectangleRoundedLines(show.bounds, 0.12f, 8, hovered ? ACCENT_COLOR : BORDER_COLOR);
 
         std::string cinemaLine = show.cinema + " - " + show.city;
-        DrawText(cinemaLine.c_str(), (int)show.bounds.x + 22, (int)show.bounds.y + 14, 22, TITLE_COLOR);
+        DrawText(cinemaLine.c_str(), (int)show.bounds.x + 24, (int)show.bounds.y + 18, 24, TITLE_COLOR);
         std::string hallLine = show.hall + "  |  " + show.time;
-        DrawText(hallLine.c_str(), (int)show.bounds.x + 22, (int)show.bounds.y + 44, 18, ACCENT_COLOR);
+        DrawText(hallLine.c_str(), (int)show.bounds.x + 24, (int)show.bounds.y + 52, 18, ACCENT_COLOR);
 
         const char* hint = "Select >";
         int hw = MeasureText(hint, 16);
-        DrawText(hint, (int)(show.bounds.x + show.bounds.width - hw - 24), (int)show.bounds.y + 30, 16, hovered ? ACCENT_COLOR : SUBTEXT_COLOR);
+        DrawText(hint, (int)(show.bounds.x + show.bounds.width - hw - 24), (int)show.bounds.y + 36, 16, hovered ? ACCENT_COLOR : SUBTEXT_COLOR);
     }
 }
 

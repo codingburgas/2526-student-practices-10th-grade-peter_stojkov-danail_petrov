@@ -1,4 +1,5 @@
 #include "app.h"
+#include "theme.h"
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -101,6 +102,8 @@ CinemaApp::CinemaApp(int w, int h)
     login(w, h),
     menu(w, h),
     movies(w, h),
+    myBookings(w, h),
+    movieDetails(w, h),
     showtimes(w, h),
     tickets(w, h),
     payment(w, h),
@@ -114,7 +117,7 @@ void CinemaApp::Run() {
 
     while (!WindowShouldClose()) {
         BeginDrawing();
-        ClearBackground(Color{ 15, 23, 42, 255 });
+        ClearBackground(GetTheme().background);
 
         switch (currentState) {
             case AppState::Login: {
@@ -122,6 +125,7 @@ void CinemaApp::Run() {
                 login.Update(loggedIn);
                 login.Draw();
                 if (loggedIn) {
+                    movies.SetAdminMode(login.IsAdmin());
                     currentState = AppState::Menu;
                 }
                 break;
@@ -132,9 +136,25 @@ void CinemaApp::Run() {
                 menu.Draw();
                 if (result == MenuResult::OPEN_MOVIES) {
                     currentState = AppState::Movies;
+                } else if (result == MenuResult::OPEN_MY_BOOKINGS) {
+                    myBookings.SetUsername(login.GetUsername());
+                    currentState = AppState::MyBookings;
+                } else if (result == MenuResult::LOG_OUT) {
+                    login.Reset();
+                    movies.SetAdminMode(false);
+                    currentState = AppState::Login;
                 } else if (result == MenuResult::EXIT_APP) {
                     CloseWindow();
                     return; // Exit Run()
+                }
+                break;
+            }
+            case AppState::MyBookings: {
+                bool goBack = false;
+                myBookings.Update(goBack);
+                myBookings.Draw();
+                if (goBack) {
+                    currentState = AppState::Menu;
                 }
                 break;
             }
@@ -146,7 +166,20 @@ void CinemaApp::Run() {
                 if (goBack) {
                     currentState = AppState::Menu;
                 } else if (movieSelected) {
-                    showtimes.SetMovie(movies.GetSelectedMovieTitle());
+                    movieDetails.SetMovie(movies.GetSelectedMovieTitle());
+                    currentState = AppState::MovieDetails;
+                }
+                break;
+            }
+            case AppState::MovieDetails: {
+                bool goBack = false;
+                bool bookTickets = false;
+                movieDetails.Update(goBack, bookTickets);
+                movieDetails.Draw();
+                if (goBack) {
+                    currentState = AppState::Movies;
+                } else if (bookTickets) {
+                    showtimes.SetMovie(movieDetails.GetMovieTitle());
                     currentState = AppState::Showtimes;
                 }
                 break;

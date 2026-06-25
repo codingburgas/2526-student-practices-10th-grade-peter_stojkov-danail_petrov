@@ -30,7 +30,13 @@
     <ClCompile Include="src\screens\menu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\screens\movie_details.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="src\screens\movies.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\screens\my_bookings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\screens\payment.cpp">
@@ -56,7 +62,16 @@
     <ClInclude Include="include\screens\menu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\screens\movie_details.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="include\screens\movies.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\screens\my_bookings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\theme.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\screens\payment.h">

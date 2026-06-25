@@ -1,4 +1,5 @@
 #include "payment.h"
+#include "theme.h"
 #include <string>
 
 static Color DARK_BG       = { 15, 23, 42, 255 };
@@ -12,6 +13,21 @@ static Color CYAN_HOVER    = { 0, 200, 220, 255 };
 static Color PINK_ACC      = { 255, 42, 109, 255 };
 static Color PINK_HOVER    = { 255, 80, 130, 255 };
 static Color GREEN_ACC     = { 0, 220, 100, 255 };
+
+static void ApplyPaymentTheme() {
+    const ThemePalette& theme = GetTheme();
+    DARK_BG = theme.background;
+    CARD_BG = theme.cardBg;
+    CARD_COLOR = theme.card;
+    BORDER_COLOR = theme.border;
+    TEXT_LIGHT = theme.text;
+    TEXT_DIM = theme.textDim;
+    CYAN_ACC = theme.accent;
+    CYAN_HOVER = theme.accentHover;
+    PINK_ACC = theme.pink;
+    PINK_HOVER = theme.pinkHover;
+    GREEN_ACC = theme.success;
+}
 
 PaymentScreen::PaymentScreen(int w, int h)
     : screenWidth(w), screenHeight(h), totalAmount(0.0f),
@@ -71,6 +87,8 @@ void PaymentScreen::Update(PaymentResult& result) {
 }
 
 void PaymentScreen::Draw() {
+    ApplyPaymentTheme();
+
     int cx = screenWidth / 2;
     int cy = screenHeight / 2;
 
@@ -122,9 +140,10 @@ void PaymentScreen::Draw() {
     DrawText(cashText, (int)(btnCash.x + (btnCash.width - cw) / 2), (int)(btnCash.y + 16), 20,
         bookingChannel == BookingChannel::WalkIn ? DARK_BG : TEXT_DIM);
 
-    DrawRectangleRounded(btnCancel, 0.4f, 8, hoverCancel ? Color{80, 30, 30, 255} : CARD_COLOR);
-    DrawRectangleRoundedLines(btnCancel, 0.4f, 8, hoverCancel ? Color{255, 100, 100, 255} : BORDER_COLOR);
+    DrawRectangleRounded(btnCancel, 0.4f, 8, hoverCancel ? GetTheme().danger : CARD_COLOR);
+    DrawRectangleRoundedLines(btnCancel, 0.4f, 8, hoverCancel ? GetTheme().dangerHover : BORDER_COLOR);
     const char* cancelText = "CANCEL";
     int canw = MeasureText(cancelText, 20);
-    DrawText(cancelText, (int)(btnCancel.x + (btnCancel.width - canw) / 2), (int)(btnCancel.y + 14), 20, TEXT_LIGHT);
+    DrawText(cancelText, (int)(btnCancel.x + (btnCancel.width - canw) / 2), (int)(btnCancel.y + 14), 20,
+        hoverCancel ? WHITE : TEXT_LIGHT);
 }

@@ -3,6 +3,8 @@
 #include "screens/menu.h"
 #include "screens/login.h"
 #include "screens/movies.h"
+#include "screens/movie_details.h"
+#include "screens/my_bookings.h"
 
 #include "screens/payment.h"
 #include "screens/showtimes.h"
@@ -12,6 +14,8 @@ enum class AppState {
     Login,
     Menu,
     Movies,
+    MyBookings,
+    MovieDetails,
     Showtimes,
     Tickets,
     Payment
@@ -29,6 +33,8 @@ private:
     LoginScreen login;
     CinemaMenu menu;
     MoviesScreen movies;
+    MyBookingsScreen myBookings;
+    MovieDetailsScreen movieDetails;
     ShowtimesScreen showtimes;
     TicketsScreen tickets;
     PaymentScreen payment;

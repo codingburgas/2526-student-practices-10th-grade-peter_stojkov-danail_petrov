@@ -1,7 +1,7 @@
 #include "app.h"
 
 int main() {
-    CinemaApp app(900, 600);
+    CinemaApp app(1100, 720);
     app.Run();
     return 0;
 }

@@ -1,12 +1,7 @@
-﻿  models.cpp
-  app.cpp
+﻿  app.cpp
   main.cpp
-  login.cpp
   menu.cpp
-  movies.cpp
-  payment.cpp
-  showtimes.cpp
-  tickets.cpp
+  my_bookings.cpp
   Generating Code...
 LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
   Cinema_Design.vcxproj -> D:\C++\2526-student-practices-10th-grade-peter_stojkov-danail_petrov\x64\Debug\Cinema_Design.exe

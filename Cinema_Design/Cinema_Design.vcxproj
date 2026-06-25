@@ -24,7 +24,9 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\screens\login.cpp" />
     <ClCompile Include="src\screens\menu.cpp" />
+    <ClCompile Include="src\screens\movie_details.cpp" />
     <ClCompile Include="src\screens\movies.cpp" />
+    <ClCompile Include="src\screens\my_bookings.cpp" />
     <ClCompile Include="src\screens\payment.cpp" />
     <ClCompile Include="src\screens\showtimes.cpp" />
     <ClCompile Include="src\screens\tickets.cpp" />
@@ -34,7 +36,10 @@
     <ClInclude Include="include\app.h" />
     <ClInclude Include="include\screens\login.h" />
     <ClInclude Include="include\screens\menu.h" />
+    <ClInclude Include="include\screens\movie_details.h" />
     <ClInclude Include="include\screens\movies.h" />
+    <ClInclude Include="include\screens\my_bookings.h" />
+    <ClInclude Include="include\theme.h" />
     <ClInclude Include="include\screens\payment.h" />
     <ClInclude Include="include\screens\showtimes.h" />
     <ClInclude Include="include\screens\tickets.h" />
@@ -134,6 +139,9 @@
       <AdditionalLibraryDirectories>..\external\raylib-5.5_win64_msvc16\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>raylib.lib;winmm.lib;gdi32.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "$(ProjectDir)..\external\raylib-5.5_win64_msvc16\lib\raylib.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -149,6 +157,9 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "$(ProjectDir)..\external\raylib-5.5_win64_msvc16\lib\raylib.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

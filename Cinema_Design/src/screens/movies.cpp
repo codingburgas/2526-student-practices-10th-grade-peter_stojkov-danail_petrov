@@ -1,10 +1,51 @@
 #include "movies.h"
+#include "theme.h"
 #include <algorithm>
 #include <cctype>
+#include <filesystem>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 static std::string toLower(std::string s) {
     std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
     return s;
+}
+
+static std::string Trim(const std::string& value) {
+    size_t start = 0;
+    while (start < value.size() && std::isspace((unsigned char)value[start])) {
+        start++;
+    }
+
+    size_t end = value.size();
+    while (end > start && std::isspace((unsigned char)value[end - 1])) {
+        end--;
+    }
+
+    return value.substr(start, end - start);
+}
+
+static bool TryParsePositiveInt(const std::string& value, int& result) {
+    std::string trimmed = Trim(value);
+    if (trimmed.empty()) {
+        return false;
+    }
+
+    for (char ch : trimmed) {
+        if (!std::isdigit((unsigned char)ch)) {
+            return false;
+        }
+    }
+
+    try {
+        result = std::stoi(trimmed);
+    } catch (...) {
+        return false;
+    }
+
+    return result > 0;
 }
 
 static Color DARK_BG       = { 15, 23, 42, 255 };
@@ -16,7 +57,19 @@ static Color ACCENT_COLOR  = { 0, 240, 255, 255 };
 static Color CARD_HOVER    = { 40, 55, 80, 255 };
 static Color PINK_ACC      = { 255, 42, 109, 255 };
 
-static int cardHeight = 126;
+static void ApplyMoviesTheme() {
+    const ThemePalette& theme = GetTheme();
+    DARK_BG = theme.background;
+    CARD_COLOR = theme.card;
+    BORDER_COLOR = theme.border;
+    TITLE_COLOR = theme.text;
+    SUBTEXT_COLOR = theme.textDim;
+    ACCENT_COLOR = theme.accent;
+    CARD_HOVER = theme.cardHover;
+    PINK_ACC = theme.pink;
+}
+
+static int cardHeight = 142;
 static constexpr float FONT_SPACING = 1.0f;
 
 static Font GetMovieFont() {
@@ -58,22 +111,248 @@ static void DrawMovieText(const char* text, float x, float y, float fontSize, Co
     DrawTextEx(GetMovieFont(), text, { x, y }, fontSize, FONT_SPACING, color);
 }
 
+static std::vector<std::string> SplitCsvLine(const std::string& line) {
+    std::vector<std::string> values;
+    std::string current;
+    bool inQuotes = false;
+
+    for (size_t i = 0; i < line.size(); i++) {
+        char ch = line[i];
+        if (ch == '"') {
+            if (inQuotes && i + 1 < line.size() && line[i + 1] == '"') {
+                current.push_back('"');
+                i++;
+            } else {
+                inQuotes = !inQuotes;
+            }
+        } else if (ch == ',' && !inQuotes) {
+            values.push_back(current);
+            current.clear();
+        } else {
+            current.push_back(ch);
+        }
+    }
+
+    values.push_back(current);
+    return values;
+}
+
+static std::string CsvEscape(const std::string& value) {
+    bool needsQuotes = value.find_first_of(",\"\n") != std::string::npos;
+    if (!needsQuotes) {
+        return value;
+    }
+
+    std::string escaped = "\"";
+    for (char ch : value) {
+        escaped += ch == '"' ? "\"\"" : std::string(1, ch);
+    }
+    escaped += '"';
+    return escaped;
+}
+
+static std::string GetMoviesCsvPath() {
+    if (FileExists("data/movies.csv")) {
+        return "data/movies.csv";
+    }
+
+    if (FileExists("Cinema_Design/data/movies.csv") || DirectoryExists("Cinema_Design")) {
+        return "Cinema_Design/data/movies.csv";
+    }
+
+    return "data/movies.csv";
+}
+
+static std::string ResolveAssetPath(const std::string& path) {
+    const std::string candidates[] = {
+        path,
+        "Cinema_Design/" + path,
+        "../" + path
+    };
+
+    for (const std::string& candidate : candidates) {
+        if (FileExists(candidate.c_str())) {
+            return candidate;
+        }
+    }
+
+    return "";
+}
+
+static void DrawTextureCover(Texture2D texture, Rectangle dest) {
+    float textureRatio = (float)texture.width / (float)texture.height;
+    float destRatio = dest.width / dest.height;
+
+    Rectangle source = { 0, 0, (float)texture.width, (float)texture.height };
+    if (textureRatio > destRatio) {
+        float sourceWidth = texture.height * destRatio;
+        source.x = ((float)texture.width - sourceWidth) / 2.0f;
+        source.width = sourceWidth;
+    } else {
+        float sourceHeight = texture.width / destRatio;
+        source.y = ((float)texture.height - sourceHeight) / 2.0f;
+        source.height = sourceHeight;
+    }
+
+    DrawTexturePro(texture, source, dest, { 0, 0 }, 0.0f, WHITE);
+}
+
+static void DrawAdminField(Rectangle bounds, const char* label, const std::string& value, bool active) {
+    DrawMovieText(label, bounds.x + 4, bounds.y - 20, 15, SUBTEXT_COLOR);
+    DrawRectangleRounded(bounds, 0.25f, 8, CARD_COLOR);
+    DrawRectangleRoundedLines(bounds, 0.25f, 8, active ? ACCENT_COLOR : BORDER_COLOR);
+    DrawMovieText(value, bounds.x + 12, bounds.y + 10, 17, value.empty() ? SUBTEXT_COLOR : TITLE_COLOR);
+}
+
 MoviesScreen::MoviesScreen(int w, int h)
     : screenWidth(w), screenHeight(h), scrollOffset(0.0f),
-    typingSearch(false)
+    typingSearch(false), postersLoaded(false), isAdmin(false),
+    showingAddForm(false), activeAdminField(-1)
 {
     searchBox = { 60, 130, 320, 38 };
+    addMovieBtn = { (float)screenWidth - 500, 22, 118, 36 };
+    saveMovieBtn = { 0, 0, 120, 40 };
+    cancelAddBtn = { 0, 0, 100, 40 };
     LoadMovies();
 }
 
 void MoviesScreen::LoadMovies() {
+    movies.clear();
+
+    std::ifstream file(GetMoviesCsvPath());
+    if (file.is_open()) {
+        std::string line;
+        bool isHeader = true;
+        while (std::getline(file, line)) {
+            if (isHeader) {
+                isHeader = false;
+                continue;
+            }
+
+            std::vector<std::string> values = SplitCsvLine(line);
+            if (values.size() >= 7) {
+                int duration = 0;
+                try {
+                    duration = std::stoi(values[6]);
+                } catch (...) {
+                    duration = 0;
+                }
+
+                movies.push_back({
+                    values[0],
+                    values[1],
+                    values[2],
+                    values[3],
+                    values[4],
+                    values[5],
+                    duration
+                });
+            }
+        }
+    }
+
+    if (!movies.empty()) {
+        return;
+    }
+
     movies = {
-        { "Inception",       "English", "Sci-Fi",  "2010-07-16", "A thief enters dreams.",              148 },
-        { "Interstellar",    "English", "Sci-Fi",  "2014-11-07", "A team travels through a wormhole.",  169 },
-        { "The Dark Knight", "English", "Action",  "2008-07-18", "Batman faces the Joker.",             152 },
-        { "Avatar",         "English", "Fantasy", "2009-12-18", "A marine joins the Na'vi.",           162 },
-        { "Titanic",        "English", "Romance", "1997-12-19", "A love story aboard Titanic.",        195 }
+        { "Inception",       "English", "Sci-Fi",  "2010-07-16", "A thief enters dreams.",             "assets/posters/inception.png",        148 },
+        { "Interstellar",    "English", "Sci-Fi",  "2014-11-07", "A team travels through a wormhole.", "assets/posters/interstellar.png",     169 },
+        { "The Dark Knight", "English", "Action",  "2008-07-18", "Batman faces the Joker.",            "assets/posters/the-dark-knight.png",  152 },
+        { "Avatar",         "English", "Fantasy", "2009-12-18", "A marine joins the Na'vi.",          "assets/posters/avatar.png",           162 },
+        { "Titanic",        "English", "Romance", "1997-12-19", "A love story aboard Titanic.",       "assets/posters/titanic.png",          195 }
     };
+    SaveMovies();
+}
+
+void MoviesScreen::SaveMovies() const {
+    std::string path = GetMoviesCsvPath();
+    std::filesystem::create_directories(std::filesystem::path(path).parent_path());
+    std::ofstream file(path);
+    if (!file.is_open()) {
+        return;
+    }
+
+    file << "title,language,genre,release_date,description,poster_path,duration\n";
+    for (const Movie& movie : movies) {
+        file << CsvEscape(movie.title) << ','
+             << CsvEscape(movie.language) << ','
+             << CsvEscape(movie.genre) << ','
+             << CsvEscape(movie.releaseDate) << ','
+             << CsvEscape(movie.description) << ','
+             << CsvEscape(movie.posterPath) << ','
+             << movie.duration << '\n';
+    }
+}
+
+void MoviesScreen::SetAdminMode(bool enabled) {
+    isAdmin = enabled;
+    showingAddForm = false;
+    activeAdminField = -1;
+    addMovieMessage.clear();
+}
+
+void MoviesScreen::LoadPosterTextures() {
+    if (postersLoaded) {
+        return;
+    }
+
+    posterTextures.clear();
+    posterTextures.reserve(movies.size());
+
+    for (const Movie& movie : movies) {
+        std::string posterPath = ResolveAssetPath(movie.posterPath);
+        if (!posterPath.empty()) {
+            Texture2D texture = LoadTexture(posterPath.c_str());
+            SetTextureFilter(texture, TEXTURE_FILTER_BILINEAR);
+            posterTextures.push_back(texture);
+        } else {
+            posterTextures.push_back(Texture2D{});
+        }
+    }
+
+    postersLoaded = true;
+}
+
+bool MoviesScreen::TryAddMovie() {
+    int duration = 0;
+
+    if (Trim(newTitle).empty() || Trim(newLanguage).empty() ||
+        Trim(newGenre).empty() || Trim(newDuration).empty()) {
+        addMovieMessage = "Fill title, language, genre and duration.";
+        return false;
+    }
+
+    if (!TryParsePositiveInt(newDuration, duration)) {
+        addMovieMessage = "Duration must be a positive number.";
+        return false;
+    }
+
+    movies.push_back({
+        Trim(newTitle),
+        Trim(newLanguage),
+        Trim(newGenre),
+        Trim(newReleaseDate).empty() ? "TBA" : Trim(newReleaseDate),
+        Trim(newDescription).empty() ? "No description yet." : Trim(newDescription),
+        Trim(newPosterPath),
+        duration
+    });
+    SaveMovies();
+    postersLoaded = false;
+    posterTextures.clear();
+    newTitle.clear();
+    newLanguage.clear();
+    newGenre.clear();
+    newReleaseDate.clear();
+    newDescription.clear();
+    newDuration.clear();
+    newPosterPath.clear();
+    searchText.clear();
+    filteredMovies.clear();
+    showingAddForm = false;
+    activeAdminField = -1;
+    addMovieMessage.clear();
+    return true;
 }
 
 void MoviesScreen::Update(bool& goBack, bool& movieSelected) {
@@ -82,9 +361,90 @@ void MoviesScreen::Update(bool& goBack, bool& movieSelected) {
 
     Vector2 mouse = GetMousePosition();
 
-    Rectangle searchArea = { (float)screenWidth - 310, 18, 250, 44 };
+    Rectangle searchArea = { (float)screenWidth - 360, 18, 220, 44 };
+    Rectangle themeBtn = { (float)screenWidth - 118, 18, 58, 44 };
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        if (CheckCollisionPointRec(mouse, themeBtn)) {
+            ToggleTheme();
+            typingSearch = false;
+            return;
+        }
+
+        if (isAdmin && CheckCollisionPointRec(mouse, addMovieBtn)) {
+            showingAddForm = true;
+            activeAdminField = 0;
+            typingSearch = false;
+            addMovieMessage.clear();
+            return;
+        }
+
+        if (showingAddForm) {
+            float formX = screenWidth / 2.0f - 260.0f;
+            float formY = 120.0f;
+            Rectangle fields[] = {
+                { formX, formY + 55, 520, 38 },
+                { formX, formY + 105, 250, 38 },
+                { formX + 270, formY + 105, 250, 38 },
+                { formX, formY + 155, 250, 38 },
+                { formX + 270, formY + 155, 250, 38 },
+                { formX, formY + 205, 520, 38 },
+                { formX, formY + 255, 520, 38 }
+            };
+            saveMovieBtn = { formX + 290, formY + 315, 110, 40 };
+            cancelAddBtn = { formX + 410, formY + 315, 110, 40 };
+
+            activeAdminField = -1;
+            for (int i = 0; i < 7; i++) {
+                if (CheckCollisionPointRec(mouse, fields[i])) {
+                    activeAdminField = i;
+                }
+            }
+
+            if (CheckCollisionPointRec(mouse, cancelAddBtn)) {
+                showingAddForm = false;
+                activeAdminField = -1;
+                addMovieMessage.clear();
+            } else if (CheckCollisionPointRec(mouse, saveMovieBtn)) {
+                TryAddMovie();
+            }
+
+            return;
+        }
+
         typingSearch = CheckCollisionPointRec(mouse, searchArea);
+    }
+
+    if (showingAddForm && activeAdminField >= 0) {
+        std::string* activeValue = nullptr;
+        if (activeAdminField == 0) activeValue = &newTitle;
+        if (activeAdminField == 1) activeValue = &newLanguage;
+        if (activeAdminField == 2) activeValue = &newGenre;
+        if (activeAdminField == 3) activeValue = &newReleaseDate;
+        if (activeAdminField == 4) activeValue = &newDuration;
+        if (activeAdminField == 5) activeValue = &newPosterPath;
+        if (activeAdminField == 6) activeValue = &newDescription;
+
+        int key = GetCharPressed();
+        while (key > 0) {
+            if (key >= 32 && key <= 125 && activeValue) {
+                activeValue->push_back((char)key);
+            }
+            key = GetCharPressed();
+        }
+
+        if (IsKeyPressed(KEY_BACKSPACE) && activeValue && !activeValue->empty()) {
+            activeValue->pop_back();
+        }
+
+        if (IsKeyPressed(KEY_ENTER)) {
+            TryAddMovie();
+        }
+
+        return;
+    }
+
+    if (showingAddForm) {
+        return;
     }
 
     scrollOffset += GetMouseWheelMove() * -30;
@@ -132,6 +492,20 @@ void MoviesScreen::Update(bool& goBack, bool& movieSelected) {
 
     for (auto& m : list) {
         Rectangle card = { 50, (float)y, (float)screenWidth - 100, (float)cardHeight };
+        Rectangle deleteBtn = { card.x + card.width - 104, card.y + card.height - 42, 78, 28 };
+
+        if (isAdmin && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
+            CheckCollisionPointRec(mouse, deleteBtn) && mouse.y > 90) {
+            movies.erase(std::remove_if(movies.begin(), movies.end(), [&m](const Movie& movie) {
+                return movie.title == m.title;
+            }), movies.end());
+            SaveMovies();
+            searchText.clear();
+            filteredMovies.clear();
+            postersLoaded = false;
+            posterTextures.clear();
+            break;
+        }
 
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(mouse, card) && mouse.y > 90) {
             selectedMovieTitle = m.title;
@@ -148,6 +522,9 @@ const std::string& MoviesScreen::GetSelectedMovieTitle() const {
 }
 
 void MoviesScreen::Draw() {
+    ApplyMoviesTheme();
+    LoadPosterTextures();
+
     int y = 130 - (int)scrollOffset;
     auto& list = searchText.empty() ? movies : filteredMovies;
 
@@ -160,34 +537,53 @@ void MoviesScreen::Draw() {
         DrawRectangleRounded(card, 0.15f, 8, hovered ? CARD_HOVER : CARD_COLOR);
         DrawRectangleRoundedLines(card, 0.15f, 8, hovered ? ACCENT_COLOR : BORDER_COLOR);
 
-        Rectangle poster = { card.x + 14, card.y + 14, 66, (float)cardHeight - 28 };
-        DrawRectangleRounded(poster, 0.25f, 6, hovered ? ACCENT_COLOR : PINK_ACC);
-        std::string initial = m.title.substr(0, 1);
-        Vector2 initialSize = MeasureMovieText(initial, 34);
-        DrawMovieText(
-            initial,
-            poster.x + (poster.width - initialSize.x) / 2,
-            poster.y + (poster.height - initialSize.y) / 2 - 2,
-            34,
-            DARK_BG
-        );
+        Rectangle posterFrame = { card.x + 16, card.y + 14, 78, (float)cardHeight - 28 };
+        DrawRectangleRounded(posterFrame, 0.18f, 6, hovered ? ACCENT_COLOR : BORDER_COLOR);
 
-        float tx = card.x + 96;
-        DrawMovieText(m.title, tx, card.y + 16, 24, TITLE_COLOR);
+        Rectangle poster = { posterFrame.x + 2, posterFrame.y + 2, posterFrame.width - 4, posterFrame.height - 4 };
+        auto movieIt = std::find_if(movies.begin(), movies.end(), [&m](const Movie& movie) {
+            return movie.title == m.title;
+        });
+        int movieIndex = movieIt == movies.end() ? -1 : (int)std::distance(movies.begin(), movieIt);
+
+        if (movieIndex >= 0 && movieIndex < (int)posterTextures.size() && posterTextures[movieIndex].id > 0) {
+            DrawTextureCover(posterTextures[movieIndex], poster);
+        } else {
+            DrawRectangleRounded(poster, 0.18f, 6, hovered ? ACCENT_COLOR : PINK_ACC);
+            std::string initial = m.title.substr(0, 1);
+            Vector2 initialSize = MeasureMovieText(initial, 34);
+            DrawMovieText(
+                initial,
+                poster.x + (poster.width - initialSize.x) / 2,
+                poster.y + (poster.height - initialSize.y) / 2 - 2,
+                34,
+                DARK_BG
+            );
+        }
+
+        float tx = card.x + 116;
+        DrawMovieText(m.title, tx, card.y + 18, 26, TITLE_COLOR);
 
         std::string meta = m.genre + "  |  " + m.language + "  |  " + m.releaseDate;
-        DrawMovieText(meta, tx, card.y + 50, 16, ACCENT_COLOR);
+        DrawMovieText(meta, tx, card.y + 56, 17, ACCENT_COLOR);
 
-        DrawMovieText(m.description, tx, card.y + 76, 16, SUBTEXT_COLOR);
+        DrawMovieText(m.description, tx, card.y + 84, 17, SUBTEXT_COLOR);
 
         std::string dur = std::to_string(m.duration) + " min";
         Vector2 durSize = MeasureMovieText(dur, 16);
         DrawMovieText(dur, card.x + card.width - durSize.x - 24, card.y + 18, 16, SUBTEXT_COLOR);
 
-        if (hovered) {
+        if (hovered && !isAdmin) {
             const char* hint = "Click to book >";
             Vector2 hintSize = MeasureMovieText(hint, 15);
             DrawMovieText(hint, card.x + card.width - hintSize.x - 24, card.y + cardHeight - 32, 15, ACCENT_COLOR);
+        }
+
+        if (isAdmin) {
+            Rectangle deleteBtn = { card.x + card.width - 104, card.y + card.height - 42, 78, 28 };
+            bool deleteHover = CheckCollisionPointRec(GetMousePosition(), deleteBtn);
+            DrawRectangleRounded(deleteBtn, 0.35f, 8, deleteHover ? GetTheme().dangerHover : GetTheme().danger);
+            DrawMovieText("DELETE", deleteBtn.x + 12, deleteBtn.y + 7, 14, WHITE);
         }
 
         y += cardHeight + 16;
@@ -199,9 +595,15 @@ void MoviesScreen::Draw() {
     DrawLine(0, 90, screenWidth, 90, Color{0, 240, 255, (unsigned char)lineAlpha});
 
     DrawMovieText("MOVIES", 50, 18, 34, TITLE_COLOR);
-    DrawMovieText("Press BACKSPACE to return", 50, 58, 15, SUBTEXT_COLOR);
+    DrawMovieText(isAdmin ? "Admin mode: add or delete movies" : "Press BACKSPACE to return", 50, 58, 15, SUBTEXT_COLOR);
 
-    Rectangle searchArea = { (float)screenWidth - 310, 18, 250, 44 };
+    if (isAdmin) {
+        bool addHover = CheckCollisionPointRec(GetMousePosition(), addMovieBtn);
+        DrawRectangleRounded(addMovieBtn, 0.35f, 8, addHover ? Color{0, 200, 220, 255} : ACCENT_COLOR);
+        DrawMovieText("ADD MOVIE", addMovieBtn.x + 13, addMovieBtn.y + 9, 16, DARK_BG);
+    }
+
+    Rectangle searchArea = { (float)screenWidth - 360, 18, 220, 44 };
     DrawRectangleRounded(searchArea, 0.5f, 8, CARD_COLOR);
     DrawRectangleRoundedLines(searchArea, 0.5f, 8, typingSearch ? ACCENT_COLOR : BORDER_COLOR);
 
@@ -211,5 +613,68 @@ void MoviesScreen::Draw() {
         DrawMovieText("Search movies...", searchArea.x + 42, searchArea.y + 12, 18, SUBTEXT_COLOR);
     } else {
         DrawMovieText(searchText, searchArea.x + 42, searchArea.y + 12, 18, TITLE_COLOR);
+    }
+
+    Rectangle themeBtn = { (float)screenWidth - 118, 18, 58, 44 };
+    bool themeHover = CheckCollisionPointRec(GetMousePosition(), themeBtn);
+    DrawRectangleRounded(themeBtn, 0.35f, 8, themeHover ? ACCENT_COLOR : CARD_COLOR);
+    DrawRectangleRoundedLines(themeBtn, 0.35f, 8, themeHover ? ACCENT_COLOR : BORDER_COLOR);
+    const char* themeText = IsLightTheme() ? "DARK" : "LIGHT";
+    Vector2 themeTextSize = MeasureMovieText(themeText, 13);
+    DrawMovieText(
+        themeText,
+        themeBtn.x + (themeBtn.width - themeTextSize.x) / 2,
+        themeBtn.y + 14,
+        13,
+        themeHover ? DARK_BG : TITLE_COLOR
+    );
+
+    if (showingAddForm) {
+        Color overlay = IsLightTheme() ? Color{245, 247, 251, 230} : Color{15, 23, 42, 230};
+        DrawRectangle(0, 90, screenWidth, screenHeight - 90, overlay);
+
+        float formX = screenWidth / 2.0f - 260.0f;
+        float formY = 120.0f;
+        Rectangle form = { formX - 30, formY - 30, 580, 420 };
+        DrawRectangleRounded(form, 0.06f, 8, GetTheme().cardBg);
+        DrawRectangleRoundedLines(form, 0.06f, 8, BORDER_COLOR);
+
+        DrawMovieText("ADD MOVIE", formX, formY - 6, 28, TITLE_COLOR);
+        DrawMovieText("Required: title, language, genre, duration", formX, formY + 28, 15, SUBTEXT_COLOR);
+
+        Rectangle fields[] = {
+            { formX, formY + 55, 520, 38 },
+            { formX, formY + 105, 250, 38 },
+            { formX + 270, formY + 105, 250, 38 },
+            { formX, formY + 155, 250, 38 },
+            { formX + 270, formY + 155, 250, 38 },
+            { formX, formY + 205, 520, 38 },
+            { formX, formY + 255, 520, 38 }
+        };
+
+        DrawAdminField(fields[0], "Title", newTitle, activeAdminField == 0);
+        DrawAdminField(fields[1], "Language", newLanguage, activeAdminField == 1);
+        DrawAdminField(fields[2], "Genre", newGenre, activeAdminField == 2);
+        DrawAdminField(fields[3], "Release date", newReleaseDate, activeAdminField == 3);
+        DrawAdminField(fields[4], "Duration", newDuration, activeAdminField == 4);
+        DrawAdminField(fields[5], "Poster path", newPosterPath, activeAdminField == 5);
+        DrawAdminField(fields[6], "Description", newDescription, activeAdminField == 6);
+
+        saveMovieBtn = { formX + 290, formY + 315, 110, 40 };
+        cancelAddBtn = { formX + 410, formY + 315, 110, 40 };
+
+        bool canSave = !Trim(newTitle).empty() && !Trim(newLanguage).empty() &&
+            !Trim(newGenre).empty() && !Trim(newDuration).empty();
+        DrawRectangleRounded(saveMovieBtn, 0.35f, 8, canSave ? ACCENT_COLOR : BORDER_COLOR);
+        DrawMovieText("ADD", saveMovieBtn.x + 39, saveMovieBtn.y + 11, 17, canSave ? DARK_BG : SUBTEXT_COLOR);
+
+        bool cancelHover = CheckCollisionPointRec(GetMousePosition(), cancelAddBtn);
+        DrawRectangleRounded(cancelAddBtn, 0.35f, 8, cancelHover ? GetTheme().danger : CARD_COLOR);
+        DrawRectangleRoundedLines(cancelAddBtn, 0.35f, 8, cancelHover ? GetTheme().danger : BORDER_COLOR);
+        DrawMovieText("CANCEL", cancelAddBtn.x + 21, cancelAddBtn.y + 11, 17, cancelHover ? WHITE : TITLE_COLOR);
+
+        if (!addMovieMessage.empty()) {
+            DrawMovieText(addMovieMessage, formX, formY + 368, 15, PINK_ACC);
+        }
     }
 }

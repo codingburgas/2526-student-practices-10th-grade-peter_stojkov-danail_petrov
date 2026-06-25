@@ -1,4 +1,5 @@
 #include "login.h"
+#include "theme.h"
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -16,6 +17,22 @@ static Color BUTTON_HOVER  = { 0, 200, 220, 255 };
 static Color PINK_ACCENT   = { 255, 42, 109, 255 };
 static Color ERROR_COLOR   = { 255, 100, 100, 255 };
 static Color SUCCESS_COLOR = { 0, 220, 100, 255 };
+
+static void ApplyLoginTheme() {
+    const ThemePalette& theme = GetTheme();
+    DARK_BG = theme.background;
+    CARD_BG = theme.cardBg;
+    CARD_COLOR = theme.card;
+    BORDER_COLOR = theme.border;
+    TITLE_COLOR = theme.text;
+    SUBTEXT_COLOR = theme.textDim;
+    ACCENT_COLOR = theme.accent;
+    ACCENT_DIM = theme.accentDim;
+    BUTTON_HOVER = theme.accentHover;
+    PINK_ACCENT = theme.pink;
+    ERROR_COLOR = theme.dangerHover;
+    SUCCESS_COLOR = theme.success;
+}
 
 static std::vector<std::string> SplitCsvLine(const std::string& line) {
     std::vector<std::string> values;
@@ -64,14 +81,15 @@ static std::string CsvEscape(const std::string& value) {
 LoginScreen::LoginScreen(int w, int h)
     : screenWidth(w), screenHeight(h),
       typingUser(false), typingPass(false),
+      isAdmin(false),
       statusColor(SUBTEXT_COLOR)
 {
     float cx = w / 2.0f;
     float cy = h / 2.0f;
-    userBox  = { cx - 160, cy - 60, 320, 44 };
-    passBox  = { cx - 160, cy + 10, 320, 44 };
-    loginBtn = { cx - 160, cy + 90, 150, 48 };
-    registerBtn = { cx + 10, cy + 90, 150, 48 };
+    userBox  = { cx - 160, cy - 42, 320, 44 };
+    passBox  = { cx - 160, cy + 32, 320, 44 };
+    loginBtn = { cx - 160, cy + 118, 150, 48 };
+    registerBtn = { cx + 10, cy + 118, 150, 48 };
 }
 
 void LoginScreen::Update(bool& loggedIn) {
@@ -114,6 +132,8 @@ void LoginScreen::Update(bool& loggedIn) {
 }
 
 bool LoginScreen::LoginUser() {
+    isAdmin = false;
+
     if (username.empty() || password.empty()) {
         statusMessage = "Enter username and password.";
         statusColor = ERROR_COLOR;
@@ -137,6 +157,7 @@ bool LoginScreen::LoginUser() {
 
         std::vector<std::string> values = SplitCsvLine(line);
         if (values.size() >= 2 && values[0] == username && values[1] == password) {
+            isAdmin = values.size() >= 3 && values[2] == "1";
             statusMessage = "Login successful.";
             statusColor = SUCCESS_COLOR;
             return true;
@@ -149,6 +170,8 @@ bool LoginScreen::LoginUser() {
 }
 
 bool LoginScreen::RegisterUser() {
+    isAdmin = false;
+
     if (username.empty() || password.empty()) {
         statusMessage = "Enter username and password.";
         statusColor = ERROR_COLOR;
@@ -208,15 +231,18 @@ bool LoginScreen::UserExists(const std::string& name) const {
 }
 
 void LoginScreen::Draw() {
+    ApplyLoginTheme();
+
     float cx = screenWidth / 2.0f;
     float cy = screenHeight / 2.0f;
 
     for (int i = 0; i < 3; i++) {
-        float alpha = 30.0f - i * 10.0f;
-        DrawCircle((int)cx, (int)cy, 280.0f + i * 40.0f, Color{0, 240, 255, (unsigned char)alpha});
+        float alpha = IsLightTheme() ? 16.0f - i * 4.0f : 30.0f - i * 10.0f;
+        DrawCircle((int)cx, (int)cy, 280.0f + i * 40.0f,
+            Color{ACCENT_COLOR.r, ACCENT_COLOR.g, ACCENT_COLOR.b, (unsigned char)alpha});
     }
 
-    Rectangle cardRect = { cx - 200, cy - 160, 400, 360 };
+    Rectangle cardRect = { cx - 200, cy - 175, 400, 390 };
     DrawRectangleRounded(cardRect, 0.08f, 8, CARD_BG);
     DrawRectangleRoundedLines(cardRect, 0.08f, 8, BORDER_COLOR);
 
@@ -226,7 +252,7 @@ void LoginScreen::Draw() {
 
     const char* sub = "Sign in to continue";
     int subW = MeasureText(sub, 18);
-    DrawText(sub, (int)(cx - subW / 2), (int)(cardRect.y + 75), 18, SUBTEXT_COLOR);
+    DrawText(sub, (int)(cx - subW / 2), (int)(cardRect.y + 80), 18, SUBTEXT_COLOR);
 
     DrawText("Username", (int)(userBox.x + 5), (int)(userBox.y - 22), 16, SUBTEXT_COLOR);
     DrawRectangleRounded(userBox, 0.3f, 8, CARD_COLOR);
@@ -270,6 +296,19 @@ void LoginScreen::Draw() {
     }
 }
 
+void LoginScreen::Reset() {
+    username.clear();
+    password.clear();
+    statusMessage.clear();
+    typingUser = false;
+    typingPass = false;
+    isAdmin = false;
+}
+
 const std::string& LoginScreen::GetUsername() const {
     return username;
+}
+
+bool LoginScreen::IsAdmin() const {
+    return isAdmin;
 }

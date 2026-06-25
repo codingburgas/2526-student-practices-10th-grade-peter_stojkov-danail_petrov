@@ -6,3 +6,16 @@ timestamp,type,username,message
 2026-06-24 22:22:32,booking_canceled,Tqnata,Booking canceled before payment for Inception | Cinema City Paradise | Hall 1 | Today 18:30
 2026-06-24 22:40:22,booking_made,Tqnata,Booking confirmed for Inception | Cinema City Paradise | Hall 1 | Today 18:30
 2026-06-24 22:40:38,booking_made,Tqnata,Booking confirmed for Interstellar | Arena Mall | Hall 3 | Today 20:45
+2026-06-25 16:01:59,booking_made,Tqnata,Booking confirmed for Inception | Cinema City | Hall 4 | Tomorrow 21:00
+2026-06-25 16:08:59,booking_canceled,Tqnata,Booking canceled before payment for Inception | Cinema City Paradise | Hall 1 | Today 18:30
+2026-06-25 16:09:06,booking_canceled,Tqnata,Booking canceled before payment for Inception | Cinema City Paradise | Hall 1 | Today 18:30
+2026-06-25 18:16:13,booking_canceled,Tqnata,Booking canceled before payment for Inception | Cinema City Paradise | Hall 1 | Today 18:30
+2026-06-25 18:16:18,booking_made,Tqnata,Booking confirmed for Inception | Cinema City Paradise | Hall 1 | Today 18:30
+2026-06-25 18:25:46,booking_canceled,prg,Booking canceled before payment for Inception | Cinema City Paradise | Hall 1 | Today 18:30
+2026-06-25 18:25:57,booking_made,prg,Booking confirmed for Interstellar | Cinema City Paradise | Hall 1 | Today 18:30
+2026-06-25 18:45:29,booking_made,prg,Booking confirmed for Titanic | Cinema City | Hall 4 | Tomorrow 21:00
+2026-06-25 18:50:02,booking_made,prg,Booking confirmed for Inception | Cinema City Paradise | Hall 1 | Today 18:30
+2026-06-25 18:50:10,booking_made,prg,Booking confirmed for The Dark Knight | Cinema City Paradise | Hall 1 | Today 18:30
+2026-06-25 18:50:33,booking_made,prg,Booking confirmed for Inception | Cinema City Paradise | Hall 1 | Today 18:30
+2026-06-25 18:51:16,booking_made,prg,Booking confirmed for Inception | Cinema City Paradise | Hall 1 | Today 18:30
+2026-06-25 18:59:39,booking_made,prg,Booking confirmed for Inception | Cinema City Paradise | Hall 1 | Today 18:30
