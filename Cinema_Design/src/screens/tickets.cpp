@@ -1,7 +1,11 @@
 #include "tickets.h"
 #include "theme.h"
+#include "ui_font.h"
 #include <sstream>
 #include <string>
+
+#define DrawText DrawAppText
+#define MeasureText MeasureAppText
 
 static Color DARK_BG       = { 15, 23, 42, 255 };
 static Color CARD_COLOR    = { 30, 41, 59, 255 };

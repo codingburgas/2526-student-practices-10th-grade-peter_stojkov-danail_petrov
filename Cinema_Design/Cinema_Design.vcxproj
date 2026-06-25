@@ -40,6 +40,7 @@
     <ClInclude Include="include\screens\movies.h" />
     <ClInclude Include="include\screens\my_bookings.h" />
     <ClInclude Include="include\theme.h" />
+    <ClInclude Include="include\ui_font.h" />
     <ClInclude Include="include\screens\payment.h" />
     <ClInclude Include="include\screens\showtimes.h" />
     <ClInclude Include="include\screens\tickets.h" />

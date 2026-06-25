@@ -1,6 +1,10 @@
 #include "payment.h"
 #include "theme.h"
+#include "ui_font.h"
 #include <string>
+
+#define DrawText DrawAppText
+#define MeasureText MeasureAppText
 
 static Color DARK_BG       = { 15, 23, 42, 255 };
 static Color CARD_BG       = { 22, 33, 62, 240 };

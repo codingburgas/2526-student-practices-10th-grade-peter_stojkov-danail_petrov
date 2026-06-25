@@ -1,8 +1,12 @@
 #include "movie_details.h"
 #include "theme.h"
+#include "ui_font.h"
 #include <fstream>
 #include <string>
 #include <vector>
+
+#define DrawText DrawAppText
+#define MeasureText MeasureAppText
 
 static std::vector<std::string> SplitCsvLine(const std::string& line) {
     std::vector<std::string> values;

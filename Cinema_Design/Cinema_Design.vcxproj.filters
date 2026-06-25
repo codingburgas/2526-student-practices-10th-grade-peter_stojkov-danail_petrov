@@ -74,6 +74,9 @@
     <ClInclude Include="include\theme.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\ui_font.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="include\screens\payment.h">
       <Filter>Header Files</Filter>
     </ClInclude>

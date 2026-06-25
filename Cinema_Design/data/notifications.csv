@@ -19,3 +19,4 @@ timestamp,type,username,message
 2026-06-25 18:50:33,booking_made,prg,Booking confirmed for Inception | Cinema City Paradise | Hall 1 | Today 18:30
 2026-06-25 18:51:16,booking_made,prg,Booking confirmed for Inception | Cinema City Paradise | Hall 1 | Today 18:30
 2026-06-25 18:59:39,booking_made,prg,Booking confirmed for Inception | Cinema City Paradise | Hall 1 | Today 18:30
+2026-06-25 19:27:59,booking_canceled,prg,Booking canceled before payment for Avatar | Cinema City Paradise | Hall 1 | Today 18:30
