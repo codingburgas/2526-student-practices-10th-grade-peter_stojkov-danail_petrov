@@ -1,4 +1,5 @@
 #include "login.h"
+#include "language.h"
 #include "theme.h"
 #include "ui_font.h"
 #include <filesystem>
@@ -250,31 +251,31 @@ void LoginScreen::Draw() {
     DrawRectangleRounded(cardRect, 0.08f, 8, CARD_BG);
     DrawRectangleRoundedLines(cardRect, 0.08f, 8, BORDER_COLOR);
 
-    const char* logo = "CINEMA";
+    const char* logo = TextFor("CINEMA");
     int logoW = MeasureText(logo, 36);
     DrawText(logo, (int)(cx - logoW / 2), (int)(cardRect.y + 30), 36, ACCENT_COLOR);
 
-    const char* sub = "Sign in to continue";
+    const char* sub = TextFor("Sign in to continue");
     int subW = MeasureText(sub, 18);
     DrawText(sub, (int)(cx - subW / 2), (int)(cardRect.y + 80), 18, SUBTEXT_COLOR);
 
-    DrawText("Username", (int)(userBox.x + 5), (int)(userBox.y - 22), 16, SUBTEXT_COLOR);
+    DrawText(TextFor("Username"), (int)(userBox.x + 5), (int)(userBox.y - 22), 16, SUBTEXT_COLOR);
     DrawRectangleRounded(userBox, 0.3f, 8, CARD_COLOR);
     DrawRectangleRoundedLines(userBox, 0.3f, 8, typingUser ? ACCENT_COLOR : BORDER_COLOR);
     DrawText(username.c_str(), (int)(userBox.x + 14), (int)(userBox.y + 13), 20, TITLE_COLOR);
 
     if (typingUser && username.empty()) {
-        DrawText("Enter username", (int)(userBox.x + 14), (int)(userBox.y + 13), 20, BORDER_COLOR);
+        DrawText(TextFor("Enter username"), (int)(userBox.x + 14), (int)(userBox.y + 13), 20, BORDER_COLOR);
     }
 
-    DrawText("Password", (int)(passBox.x + 5), (int)(passBox.y - 22), 16, SUBTEXT_COLOR);
+    DrawText(TextFor("Password"), (int)(passBox.x + 5), (int)(passBox.y - 22), 16, SUBTEXT_COLOR);
     DrawRectangleRounded(passBox, 0.3f, 8, CARD_COLOR);
     DrawRectangleRoundedLines(passBox, 0.3f, 8, typingPass ? ACCENT_COLOR : BORDER_COLOR);
     std::string masked(password.size(), '*');
     DrawText(masked.c_str(), (int)(passBox.x + 14), (int)(passBox.y + 13), 20, TITLE_COLOR);
 
     if (typingPass && password.empty()) {
-        DrawText("Enter password", (int)(passBox.x + 14), (int)(passBox.y + 13), 20, BORDER_COLOR);
+        DrawText(TextFor("Enter password"), (int)(passBox.x + 14), (int)(passBox.y + 13), 20, BORDER_COLOR);
     }
 
     bool buttonHovered = CheckCollisionPointRec(GetMousePosition(), loginBtn);
@@ -283,20 +284,21 @@ void LoginScreen::Draw() {
     Color btnCol = canLogin ? (buttonHovered ? BUTTON_HOVER : ACCENT_COLOR) : BORDER_COLOR;
     DrawRectangleRounded(loginBtn, 0.5f, 8, btnCol);
 
-    const char* btnText = "LOGIN";
+    const char* btnText = TextFor("LOGIN");
     int btnW = MeasureText(btnText, 22);
     DrawText(btnText, (int)(loginBtn.x + (loginBtn.width - btnW) / 2), (int)(loginBtn.y + 14), 22, DARK_BG);
 
     Color regCol = canLogin ? (registerHovered ? PINK_ACCENT : Color{255, 80, 130, 255}) : BORDER_COLOR;
     DrawRectangleRounded(registerBtn, 0.5f, 8, regCol);
 
-    const char* regText = "REGISTER";
+    const char* regText = TextFor("REGISTER");
     int regW = MeasureText(regText, 20);
     DrawText(regText, (int)(registerBtn.x + (registerBtn.width - regW) / 2), (int)(registerBtn.y + 15), 20, DARK_BG);
 
     if (!statusMessage.empty()) {
-        int msgW = MeasureText(statusMessage.c_str(), 16);
-        DrawText(statusMessage.c_str(), (int)(cx - msgW / 2), (int)(loginBtn.y + 65), 16, statusColor);
+        const char* statusText = TextFor(statusMessage.c_str());
+        int msgW = MeasureText(statusText, 16);
+        DrawText(statusText, (int)(cx - msgW / 2), (int)(loginBtn.y + 65), 16, statusColor);
     }
 }
 

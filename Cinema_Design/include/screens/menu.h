@@ -23,11 +23,13 @@ private:
     Rectangle btnMyBookings;
     Rectangle btnExit;
     Rectangle btnTheme;
+    Rectangle btnLanguage;
     Rectangle btnLogout;
 
     bool hoverMovies;
     bool hoverMyBookings;
     bool hoverExit;
     bool hoverTheme;
+    bool hoverLanguage;
     bool hoverLogout;
 };

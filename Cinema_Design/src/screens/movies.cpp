@@ -1,4 +1,5 @@
 #include "movies.h"
+#include "language.h"
 #include "theme.h"
 #include <algorithm>
 #include <cctype>
@@ -109,9 +110,22 @@ static Font GetMovieFont() {
             "C:/Windows/Fonts/arial.ttf"
         };
 
+        static int codepoints[352]{};
+        static bool codepointsReady = false;
+        if (!codepointsReady) {
+            int index = 0;
+            for (int cp = 32; cp <= 126; cp++) {
+                codepoints[index++] = cp;
+            }
+            for (int cp = 0x0400; cp <= 0x04FF; cp++) {
+                codepoints[index++] = cp;
+            }
+            codepointsReady = true;
+        }
+
         for (const char* path : fontPaths) {
             if (FileExists(path)) {
-                font = LoadFontEx(path, 48, nullptr, 0);
+                font = LoadFontEx(path, 48, codepoints, 351);
                 SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
                 loaded = true;
                 break;
@@ -234,7 +248,7 @@ MoviesScreen::MoviesScreen(int w, int h)
     selectedGenreIndex(0), selectedLanguageIndex(0), sortMode(0)
 {
     searchBox = { 60, 130, 320, 38 };
-    addMovieBtn = { (float)screenWidth - 500, 22, 118, 36 };
+    addMovieBtn = { (float)screenWidth - 570, 22, 118, 36 };
     saveMovieBtn = { 0, 0, 120, 40 };
     cancelAddBtn = { 0, 0, 100, 40 };
     LoadMovies();
@@ -473,15 +487,22 @@ void MoviesScreen::Update(bool& goBack, bool& movieSelected) {
 
     Vector2 mouse = GetMousePosition();
 
-    Rectangle searchArea = { (float)screenWidth - 360, 18, 220, 44 };
-    Rectangle themeBtn = { (float)screenWidth - 118, 18, 58, 44 };
+    Rectangle searchArea = { (float)screenWidth - 430, 18, 220, 44 };
+    Rectangle themeBtn = { (float)screenWidth - 190, 18, 58, 44 };
+    Rectangle languageTopBtn = { (float)screenWidth - 118, 18, 58, 44 };
     Rectangle genreBtn = { 50.0f, 104.0f, 150.0f, 34.0f };
-    Rectangle languageBtn = { 214.0f, 104.0f, 170.0f, 34.0f };
+    Rectangle languageFilterBtn = { 214.0f, 104.0f, 170.0f, 34.0f };
     Rectangle sortBtn = { 398.0f, 104.0f, 170.0f, 34.0f };
     Rectangle clearFiltersBtn = { 582.0f, 104.0f, 92.0f, 34.0f };
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         if (CheckCollisionPointRec(mouse, themeBtn)) {
             ToggleTheme();
+            typingSearch = false;
+            return;
+        }
+
+        if (CheckCollisionPointRec(mouse, languageTopBtn)) {
+            ToggleLanguage();
             typingSearch = false;
             return;
         }
@@ -534,7 +555,7 @@ void MoviesScreen::Update(bool& goBack, bool& movieSelected) {
             return;
         }
 
-        if (!showingAddForm && CheckCollisionPointRec(mouse, languageBtn)) {
+        if (!showingAddForm && CheckCollisionPointRec(mouse, languageFilterBtn)) {
             selectedLanguageIndex = languageOptions.empty() ? 0 : (selectedLanguageIndex + 1) % (int)languageOptions.size();
             scrollOffset = 0.0f;
             ApplyMovieFilters();
@@ -711,7 +732,7 @@ void MoviesScreen::Draw() {
         DrawMovieText(dur, card.x + card.width - durSize.x - 24, card.y + 18, 16, SUBTEXT_COLOR);
 
         if (hovered && !isAdmin) {
-            const char* hint = "Click to book >";
+            const char* hint = TextFor("Click to book >");
             Vector2 hintSize = MeasureMovieText(hint, 15);
             DrawMovieText(hint, card.x + card.width - hintSize.x - 24, card.y + cardHeight - 32, 15, ACCENT_COLOR);
         }
@@ -720,14 +741,14 @@ void MoviesScreen::Draw() {
             Rectangle deleteBtn = { card.x + card.width - 104, card.y + card.height - 42, 78, 28 };
             bool deleteHover = CheckCollisionPointRec(GetMousePosition(), deleteBtn);
             DrawRectangleRounded(deleteBtn, 0.35f, 8, deleteHover ? GetTheme().dangerHover : GetTheme().danger);
-            DrawMovieText("DELETE", deleteBtn.x + 12, deleteBtn.y + 7, 14, WHITE);
+            DrawMovieText(TextFor("DELETE"), deleteBtn.x + 8, deleteBtn.y + 7, 14, WHITE);
         }
 
         y += cardHeight + 16;
     }
 
     if (list.empty()) {
-        const char* emptyText = "No movies match these filters.";
+        const char* emptyText = TextFor("No movies match these filters.");
         Vector2 emptySize = MeasureMovieText(emptyText, 24);
         DrawMovieText(emptyText, (screenWidth - emptySize.x) / 2.0f, 260.0f, 24, SUBTEXT_COLOR);
     }
@@ -738,17 +759,17 @@ void MoviesScreen::Draw() {
     DrawLine(0, 90, screenWidth, 90, Color{0, 240, 255, (unsigned char)lineAlpha});
     DrawLine(0, 150, screenWidth, 150, Color{0, 240, 255, (unsigned char)(lineAlpha * 0.65f)});
 
-    DrawMovieText("MOVIES", 50, 18, 34, TITLE_COLOR);
-    DrawMovieText(isAdmin ? "Admin mode: add or delete movies" : "Press BACKSPACE to return", 50, 58, 15, SUBTEXT_COLOR);
+    DrawMovieText(TextFor("MOVIES"), 50, 18, 34, TITLE_COLOR);
+    DrawMovieText(TextFor(isAdmin ? "Admin mode: add or delete movies" : "Press BACKSPACE to return"), 50, 58, 15, SUBTEXT_COLOR);
 
     if (isAdmin) {
         bool addHover = CheckCollisionPointRec(GetMousePosition(), addMovieBtn);
         DrawRectangleRounded(addMovieBtn, 0.35f, 8, addHover ? Color{0, 200, 220, 255} : ACCENT_COLOR);
-        DrawMovieText("ADD MOVIE", addMovieBtn.x + 13, addMovieBtn.y + 9, 16, DARK_BG);
+        DrawMovieText(TextFor("ADD MOVIE"), addMovieBtn.x + 13, addMovieBtn.y + 9, 16, DARK_BG);
     }
 
     Rectangle genreBtn = { 50.0f, 104.0f, 150.0f, 34.0f };
-    Rectangle languageBtn = { 214.0f, 104.0f, 170.0f, 34.0f };
+    Rectangle languageFilterBtn = { 214.0f, 104.0f, 170.0f, 34.0f };
     Rectangle sortBtn = { 398.0f, 104.0f, 170.0f, 34.0f };
     Rectangle clearFiltersBtn = { 582.0f, 104.0f, 92.0f, 34.0f };
 
@@ -773,28 +794,28 @@ void MoviesScreen::Draw() {
         ? languageOptions[selectedLanguageIndex]
         : "All";
     const char* sortLabels[] = { "Title", "Duration", "Newest" };
-    drawFilterButton(genreBtn, "Genre: " + genreValue, selectedGenreIndex > 0);
-    drawFilterButton(languageBtn, "Language: " + languageValue, selectedLanguageIndex > 0);
-    drawFilterButton(sortBtn, std::string("Sort: ") + sortLabels[sortMode], sortMode != 0);
-    drawFilterButton(clearFiltersBtn, "Clear", selectedGenreIndex > 0 || selectedLanguageIndex > 0 || sortMode != 0 || !searchText.empty());
+    drawFilterButton(genreBtn, std::string(TextFor("Genre: ")) + (genreValue == "All" ? TextFor("All") : genreValue), selectedGenreIndex > 0);
+    drawFilterButton(languageFilterBtn, std::string(TextFor("Language: ")) + (languageValue == "All" ? TextFor("All") : languageValue), selectedLanguageIndex > 0);
+    drawFilterButton(sortBtn, std::string(TextFor("Sort: ")) + TextFor(sortLabels[sortMode]), sortMode != 0);
+    drawFilterButton(clearFiltersBtn, TextFor("Clear"), selectedGenreIndex > 0 || selectedLanguageIndex > 0 || sortMode != 0 || !searchText.empty());
 
-    Rectangle searchArea = { (float)screenWidth - 360, 18, 220, 44 };
+    Rectangle searchArea = { (float)screenWidth - 430, 18, 220, 44 };
     DrawRectangleRounded(searchArea, 0.5f, 8, CARD_COLOR);
     DrawRectangleRoundedLines(searchArea, 0.5f, 8, typingSearch ? ACCENT_COLOR : BORDER_COLOR);
 
     DrawMovieText("Q", searchArea.x + 14, searchArea.y + 10, 20, SUBTEXT_COLOR);
 
     if (searchText.empty() && !typingSearch) {
-        DrawMovieText("Search movies...", searchArea.x + 42, searchArea.y + 12, 18, SUBTEXT_COLOR);
+        DrawMovieText(TextFor("Search movies..."), searchArea.x + 42, searchArea.y + 12, 18, SUBTEXT_COLOR);
     } else {
         DrawMovieText(searchText, searchArea.x + 42, searchArea.y + 12, 18, TITLE_COLOR);
     }
 
-    Rectangle themeBtn = { (float)screenWidth - 118, 18, 58, 44 };
+    Rectangle themeBtn = { (float)screenWidth - 190, 18, 58, 44 };
     bool themeHover = CheckCollisionPointRec(GetMousePosition(), themeBtn);
     DrawRectangleRounded(themeBtn, 0.35f, 8, themeHover ? ACCENT_COLOR : CARD_COLOR);
     DrawRectangleRoundedLines(themeBtn, 0.35f, 8, themeHover ? ACCENT_COLOR : BORDER_COLOR);
-    const char* themeText = IsLightTheme() ? "DARK" : "LIGHT";
+    const char* themeText = TextFor(IsLightTheme() ? "DARK" : "LIGHT");
     Vector2 themeTextSize = MeasureMovieText(themeText, 13);
     DrawMovieText(
         themeText,
@@ -802,6 +823,20 @@ void MoviesScreen::Draw() {
         themeBtn.y + 14,
         13,
         themeHover ? DARK_BG : TITLE_COLOR
+    );
+
+    Rectangle languageTopBtn = { (float)screenWidth - 118, 18, 58, 44 };
+    bool languageHover = CheckCollisionPointRec(GetMousePosition(), languageTopBtn);
+    DrawRectangleRounded(languageTopBtn, 0.35f, 8, languageHover ? ACCENT_COLOR : CARD_COLOR);
+    DrawRectangleRoundedLines(languageTopBtn, 0.35f, 8, languageHover ? ACCENT_COLOR : BORDER_COLOR);
+    const char* languageText = IsBulgarian() ? "EN" : "BG";
+    Vector2 languageTextSize = MeasureMovieText(languageText, 13);
+    DrawMovieText(
+        languageText,
+        languageTopBtn.x + (languageTopBtn.width - languageTextSize.x) / 2,
+        languageTopBtn.y + 14,
+        13,
+        languageHover ? DARK_BG : TITLE_COLOR
     );
 
     if (showingAddForm) {
@@ -814,8 +849,8 @@ void MoviesScreen::Draw() {
         DrawRectangleRounded(form, 0.06f, 8, GetTheme().cardBg);
         DrawRectangleRoundedLines(form, 0.06f, 8, BORDER_COLOR);
 
-        DrawMovieText("ADD MOVIE", formX, formY - 6, 28, TITLE_COLOR);
-        DrawMovieText("Required: title, language, genre, duration", formX, formY + 28, 15, SUBTEXT_COLOR);
+        DrawMovieText(TextFor("ADD MOVIE"), formX, formY - 6, 28, TITLE_COLOR);
+        DrawMovieText(TextFor("Required: title, language, genre, duration"), formX, formY + 28, 15, SUBTEXT_COLOR);
 
         Rectangle fields[] = {
             { formX, formY + 55, 520, 38 },
@@ -827,9 +862,9 @@ void MoviesScreen::Draw() {
             { formX, formY + 255, 520, 38 }
         };
 
-        DrawAdminField(fields[0], "Title", newTitle, activeAdminField == 0);
-        DrawAdminField(fields[1], "Language", newLanguage, activeAdminField == 1);
-        DrawAdminField(fields[2], "Genre", newGenre, activeAdminField == 2);
+        DrawAdminField(fields[0], TextFor("Title"), newTitle, activeAdminField == 0);
+        DrawAdminField(fields[1], TextFor("Language"), newLanguage, activeAdminField == 1);
+        DrawAdminField(fields[2], TextFor("Genre"), newGenre, activeAdminField == 2);
         DrawAdminField(fields[3], "Release date", newReleaseDate, activeAdminField == 3);
         DrawAdminField(fields[4], "Duration", newDuration, activeAdminField == 4);
         DrawAdminField(fields[5], "Poster path", newPosterPath, activeAdminField == 5);
@@ -841,15 +876,15 @@ void MoviesScreen::Draw() {
         bool canSave = !Trim(newTitle).empty() && !Trim(newLanguage).empty() &&
             !Trim(newGenre).empty() && !Trim(newDuration).empty();
         DrawRectangleRounded(saveMovieBtn, 0.35f, 8, canSave ? ACCENT_COLOR : BORDER_COLOR);
-        DrawMovieText("ADD", saveMovieBtn.x + 39, saveMovieBtn.y + 11, 17, canSave ? DARK_BG : SUBTEXT_COLOR);
+        DrawMovieText(TextFor("ADD"), saveMovieBtn.x + 24, saveMovieBtn.y + 11, 17, canSave ? DARK_BG : SUBTEXT_COLOR);
 
         bool cancelHover = CheckCollisionPointRec(GetMousePosition(), cancelAddBtn);
         DrawRectangleRounded(cancelAddBtn, 0.35f, 8, cancelHover ? GetTheme().danger : CARD_COLOR);
         DrawRectangleRoundedLines(cancelAddBtn, 0.35f, 8, cancelHover ? GetTheme().danger : BORDER_COLOR);
-        DrawMovieText("CANCEL", cancelAddBtn.x + 21, cancelAddBtn.y + 11, 17, cancelHover ? WHITE : TITLE_COLOR);
+        DrawMovieText(TextFor("CANCEL"), cancelAddBtn.x + 14, cancelAddBtn.y + 11, 17, cancelHover ? WHITE : TITLE_COLOR);
 
         if (!addMovieMessage.empty()) {
-            DrawMovieText(addMovieMessage, formX, formY + 368, 15, PINK_ACC);
+            DrawMovieText(TextFor(addMovieMessage.c_str()), formX, formY + 368, 15, PINK_ACC);
         }
     }
 }

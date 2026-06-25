@@ -1,4 +1,5 @@
 #include "tickets.h"
+#include "language.h"
 #include "theme.h"
 #include "ui_font.h"
 #include <sstream>
@@ -130,7 +131,7 @@ void TicketsScreen::Draw() {
 
     int cx = screenWidth / 2;
 
-    DrawText("SELECT YOUR SEATS", cx - MeasureText("SELECT YOUR SEATS", 28) / 2, 14, 28, TEXT_LIGHT);
+    DrawText(TextFor("SELECT YOUR SEATS"), cx - MeasureText(TextFor("SELECT YOUR SEATS"), 28) / 2, 14, 28, TEXT_LIGHT);
     if (!showLabel.empty()) {
         DrawText(showLabel.c_str(), cx - MeasureText(showLabel.c_str(), 14) / 2, 48, 14, TEXT_DIM);
     }
@@ -143,7 +144,7 @@ void TicketsScreen::Draw() {
             1.0f, 12, Color{0, 240, 255, (unsigned char)(20 + i * 10)});
     }
     DrawRectangleRounded(screenBar, 1.0f, 12, CYAN_GLOW);
-    DrawText("SCREEN", cx - MeasureText("SCREEN", 14) / 2, 102, 14, TEXT_DIM);
+    DrawText(TextFor("SCREEN"), cx - MeasureText(TextFor("SCREEN"), 14) / 2, 102, 14, TEXT_DIM);
 
     Vector2 mouse = GetMousePosition();
     for (auto& s : seats) {
@@ -186,10 +187,10 @@ void TicketsScreen::Draw() {
     DrawText("Platinum 20", lx + 146, ly + 1, 16, TEXT_DIM);
 
     DrawRectangleRounded({(float)(lx + 260), (float)ly, 18, 18}, 0.35f, 4, SEAT_SELECTED);
-    DrawText("Selected", lx + 286, ly + 1, 16, TEXT_DIM);
+    DrawText(TextFor("Selected"), lx + 286, ly + 1, 16, TEXT_DIM);
 
     DrawRectangleRounded({(float)(lx + 380), (float)ly, 18, 18}, 0.35f, 4, SEAT_RESERVED);
-    DrawText("Taken", lx + 406, ly + 1, 16, TEXT_DIM);
+    DrawText(TextFor("Taken"), lx + 406, ly + 1, 16, TEXT_DIM);
 
     float total = GetTotalAmount();
     int roundedTotal = (int)(total + 0.5f);
@@ -202,11 +203,11 @@ void TicketsScreen::Draw() {
     Color btnColor = selectedCount > 0 ? (confirmHover ? GREEN_HOVER : GREEN_BTN) : SEAT_AVAIL;
     DrawRectangleRounded(confirmBtn, 0.5f, 8, btnColor);
 
-    const char* btnText = "CONFIRM BOOKING";
+    const char* btnText = TextFor("CONFIRM BOOKING");
     int bw = MeasureText(btnText, 20);
     DrawText(btnText, (int)(confirmBtn.x + (confirmBtn.width - bw) / 2), (int)(confirmBtn.y + 14), 20, DARK_BG);
 
-    DrawText("BACKSPACE to go back", 20, screenHeight - 28, 14, TEXT_DIM);
+    DrawText(TextFor("BACKSPACE to go back"), 20, screenHeight - 28, 14, TEXT_DIM);
 }
 
 float TicketsScreen::GetTotalAmount() const {

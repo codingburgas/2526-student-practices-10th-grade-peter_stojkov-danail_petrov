@@ -15,9 +15,22 @@ inline Font GetUIFont() {
             "C:/Windows/Fonts/arial.ttf"
         };
 
+        static int codepoints[352]{};
+        static bool codepointsReady = false;
+        if (!codepointsReady) {
+            int index = 0;
+            for (int cp = 32; cp <= 126; cp++) {
+                codepoints[index++] = cp;
+            }
+            for (int cp = 0x0400; cp <= 0x04FF; cp++) {
+                codepoints[index++] = cp;
+            }
+            codepointsReady = true;
+        }
+
         for (const char* path : fontPaths) {
             if (FileExists(path)) {
-                font = LoadFontEx(path, 64, nullptr, 0);
+                font = LoadFontEx(path, 64, codepoints, 351);
                 SetTextureFilter(font.texture, TEXTURE_FILTER_BILINEAR);
                 loaded = true;
                 break;

@@ -1,4 +1,5 @@
 #include "my_bookings.h"
+#include "language.h"
 #include "theme.h"
 #include "ui_font.h"
 #include <fstream>
@@ -48,20 +49,20 @@ static std::string GetBookingsCsvPath() {
 
 static std::string FormatPayment(const std::string& value) {
     if (value == "credit_card") {
-        return "Credit card";
+        return TextFor("Credit card");
     }
     if (value == "cash") {
-        return "Cash";
+        return TextFor("Cash");
     }
     return value;
 }
 
 static std::string FormatChannel(const std::string& value) {
     if (value == "walk_in") {
-        return "Walk-in";
+        return TextFor("Walk-in");
     }
     if (value == "online") {
-        return "Online";
+        return TextFor("Online");
     }
     return value;
 }
@@ -175,12 +176,12 @@ void MyBookingsScreen::Update(bool& goBack) {
 void MyBookingsScreen::Draw() {
     const ThemePalette& theme = GetTheme();
 
-    DrawText("MY BOOKINGS", 50, 24, 34, theme.text);
-    DrawText("BACKSPACE to return", screenWidth - 190, 34, 14, theme.textDim);
+    DrawText(TextFor("MY BOOKINGS"), 50, 24, 34, theme.text);
+    DrawText(TextFor("BACKSPACE to return"), screenWidth - 220, 34, 14, theme.textDim);
     DrawLine(0, 90, screenWidth, 90, theme.border);
 
     if (bookings.empty()) {
-        const char* emptyText = "No bookings yet.";
+        const char* emptyText = TextFor("No bookings yet.");
         int ew = MeasureText(emptyText, 28);
         DrawText(emptyText, screenWidth / 2 - ew / 2, screenHeight / 2 - 20, 28, theme.textDim);
         return;
@@ -196,7 +197,7 @@ void MyBookingsScreen::Draw() {
         DrawText(booking.show.c_str(), (int)card.x + 24, (int)card.y + 18, 21, theme.text);
         DrawText(booking.timestamp.c_str(), (int)card.x + 24, (int)card.y + 50, 15, theme.textDim);
 
-        std::string seats = "Seats: " + booking.seats + " (" + booking.seatCount + ")";
+        std::string seats = std::string(TextFor("Seats: ")) + booking.seats + " (" + booking.seatCount + ")";
         DrawText(seats.c_str(), (int)card.x + 24, (int)card.y + 78, 17, theme.accent);
 
         std::string total = booking.totalAmount + " Euro";
@@ -211,7 +212,7 @@ void MyBookingsScreen::Draw() {
         Rectangle deleteBtn = { card.x + card.width - 118.0f, card.y + card.height - 42.0f, 86.0f, 28.0f };
         bool deleteHover = CheckCollisionPointRec(GetMousePosition(), deleteBtn);
         DrawRectangleRounded(deleteBtn, 0.35f, 8, deleteHover ? theme.dangerHover : theme.danger);
-        DrawText("DELETE", (int)deleteBtn.x + 16, (int)deleteBtn.y + 7, 14, WHITE);
+        DrawText(TextFor("DELETE"), (int)deleteBtn.x + 10, (int)deleteBtn.y + 7, 14, WHITE);
 
         y += card.height + 16.0f;
     }

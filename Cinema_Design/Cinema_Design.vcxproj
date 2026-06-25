@@ -34,6 +34,7 @@
   <ItemGroup>
     <ClInclude Include="src\models.h" />
     <ClInclude Include="include\app.h" />
+    <ClInclude Include="include\language.h" />
     <ClInclude Include="include\screens\login.h" />
     <ClInclude Include="include\screens\menu.h" />
     <ClInclude Include="include\screens\movie_details.h" />

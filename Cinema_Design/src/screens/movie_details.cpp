@@ -1,4 +1,5 @@
 #include "movie_details.h"
+#include "language.h"
 #include "theme.h"
 #include "ui_font.h"
 #include <fstream>
@@ -178,10 +179,10 @@ void MovieDetailsScreen::Draw() {
 
     DrawRectangleRounded(backBtn, 0.35f, 8, backHover ? theme.cardHover : theme.card);
     DrawRectangleRoundedLines(backBtn, 0.35f, 8, backHover ? theme.accent : theme.border);
-    DrawText("BACK", (int)backBtn.x + 25, (int)backBtn.y + 10, 15, theme.text);
+    DrawText(TextFor("BACK"), (int)backBtn.x + 18, (int)backBtn.y + 10, 15, theme.text);
 
-    DrawText("MOVIE DETAILS", 170, 28, 30, theme.text);
-    DrawText("Review the movie, then book tickets.", 172, 62, 15, theme.textDim);
+    DrawText(TextFor("MOVIE DETAILS"), 170, 28, 30, theme.text);
+    DrawText(TextFor("Review the movie, then book tickets."), 172, 62, 15, theme.textDim);
 
     Rectangle posterFrame = { 70.0f, 130.0f, 260.0f, 380.0f };
     DrawRectangleRounded(posterFrame, 0.04f, 8, theme.border);
@@ -205,22 +206,22 @@ void MovieDetailsScreen::Draw() {
     }
     DrawText(meta.c_str(), (int)infoX, 205, 19, theme.accent);
 
-    DrawText("Description", (int)infoX, 270, 22, theme.text);
+    DrawText(TextFor("Description"), (int)infoX, 270, 22, theme.text);
     DrawText(movie.description.c_str(), (int)infoX, 308, 20, theme.textDim);
 
     Rectangle detailCard = { infoX, 380.0f, (float)screenWidth - infoX - 70.0f, 120.0f };
     DrawRectangleRounded(detailCard, 0.08f, 8, theme.card);
     DrawRectangleRoundedLines(detailCard, 0.08f, 8, theme.border);
-    DrawText("Genre", (int)detailCard.x + 24, (int)detailCard.y + 24, 16, theme.textDim);
+    DrawText(TextFor("Genre"), (int)detailCard.x + 24, (int)detailCard.y + 24, 16, theme.textDim);
     DrawText(movie.genre.c_str(), (int)detailCard.x + 24, (int)detailCard.y + 54, 22, theme.text);
-    DrawText("Language", (int)detailCard.x + 210, (int)detailCard.y + 24, 16, theme.textDim);
+    DrawText(TextFor("Language"), (int)detailCard.x + 210, (int)detailCard.y + 24, 16, theme.textDim);
     DrawText(movie.language.c_str(), (int)detailCard.x + 210, (int)detailCard.y + 54, 22, theme.text);
-    DrawText("Duration", (int)detailCard.x + 420, (int)detailCard.y + 24, 16, theme.textDim);
+    DrawText(TextFor("Duration"), (int)detailCard.x + 420, (int)detailCard.y + 24, 16, theme.textDim);
     std::string duration = movie.duration > 0 ? std::to_string(movie.duration) + " min" : "TBA";
     DrawText(duration.c_str(), (int)detailCard.x + 420, (int)detailCard.y + 54, 22, theme.text);
 
     DrawRectangleRounded(bookBtn, 0.35f, 8, bookHover ? theme.accentHover : theme.accent);
-    const char* bookText = "BOOK TICKETS";
+    const char* bookText = TextFor("BOOK TICKETS");
     int bw = MeasureText(bookText, 20);
     DrawText(bookText, (int)(bookBtn.x + (bookBtn.width - bw) / 2), (int)bookBtn.y + 15, 20, theme.background);
 }

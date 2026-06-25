@@ -56,6 +56,9 @@
     <ClInclude Include="include\app.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\language.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="include\screens\login.h">
       <Filter>Header Files</Filter>
     </ClInclude>

@@ -1,4 +1,5 @@
 #include "showtimes.h"
+#include "language.h"
 #include "theme.h"
 #include "ui_font.h"
 #include <string>
@@ -88,9 +89,9 @@ void ShowtimesScreen::Update(bool& goBack, bool& showSelected) {
 void ShowtimesScreen::Draw() {
     ApplyShowtimesTheme();
 
-    DrawText("SHOWTIMES", 50, 20, 32, TITLE_COLOR);
+    DrawText(TextFor("SHOWTIMES"), 50, 20, 32, TITLE_COLOR);
     DrawText(movieTitle.c_str(), 50, 58, 18, ACCENT_COLOR);
-    DrawText("BACKSPACE to return", screenWidth - 190, 28, 14, SUBTEXT_COLOR);
+    DrawText(TextFor("BACKSPACE to return"), screenWidth - 220, 28, 14, SUBTEXT_COLOR);
 
     Vector2 mouse = GetMousePosition();
 
@@ -98,13 +99,13 @@ void ShowtimesScreen::Draw() {
     bool walkInSelected = bookingChannel == BookingChannel::WalkIn;
     DrawRectangleRounded(onlineBtn, 0.35f, 8, onlineSelected ? ACCENT_COLOR : CARD_COLOR);
     DrawRectangleRoundedLines(onlineBtn, 0.35f, 8, onlineSelected ? ACCENT_COLOR : BORDER_COLOR);
-    DrawText("ONLINE", (int)onlineBtn.x + 44, (int)onlineBtn.y + 12, 18, onlineSelected ? DARK_BG : TITLE_COLOR);
+    DrawText(TextFor("ONLINE"), (int)onlineBtn.x + 38, (int)onlineBtn.y + 12, 18, onlineSelected ? DARK_BG : TITLE_COLOR);
 
     DrawRectangleRounded(walkInBtn, 0.35f, 8, walkInSelected ? PINK_ACC : CARD_COLOR);
     DrawRectangleRoundedLines(walkInBtn, 0.35f, 8, walkInSelected ? PINK_ACC : BORDER_COLOR);
-    DrawText("WALK-IN", (int)walkInBtn.x + 44, (int)walkInBtn.y + 12, 18, walkInSelected ? DARK_BG : TITLE_COLOR);
+    DrawText(TextFor("WALK-IN"), (int)walkInBtn.x + 34, (int)walkInBtn.y + 12, 18, walkInSelected ? DARK_BG : TITLE_COLOR);
 
-    DrawText("Choose a booking type, then select a cinema hall and showtime.", 430, 108, 16, SUBTEXT_COLOR);
+    DrawText(TextFor("Choose a booking type, then select a cinema hall and showtime."), 430, 108, 16, SUBTEXT_COLOR);
 
     for (const auto& show : shows) {
         bool hovered = CheckCollisionPointRec(mouse, show.bounds);
@@ -116,7 +117,7 @@ void ShowtimesScreen::Draw() {
         std::string hallLine = show.hall + "  |  " + show.time;
         DrawText(hallLine.c_str(), (int)show.bounds.x + 24, (int)show.bounds.y + 52, 18, ACCENT_COLOR);
 
-        const char* hint = "Select >";
+        const char* hint = TextFor("Select >");
         int hw = MeasureText(hint, 16);
         DrawText(hint, (int)(show.bounds.x + show.bounds.width - hw - 24), (int)show.bounds.y + 36, 16, hovered ? ACCENT_COLOR : SUBTEXT_COLOR);
     }

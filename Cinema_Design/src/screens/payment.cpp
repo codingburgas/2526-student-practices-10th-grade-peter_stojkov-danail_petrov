@@ -1,4 +1,5 @@
 #include "payment.h"
+#include "language.h"
 #include "theme.h"
 #include "ui_font.h"
 #include <string>
@@ -104,10 +105,10 @@ void PaymentScreen::Draw() {
         DrawCircle(cx, cy, 60, GREEN_ACC);
         DrawText("V", cx - MeasureText("V", 50) / 2, cy - 25, 50, DARK_BG);
 
-        const char* msg = "Payment Successful!";
+        const char* msg = TextFor("Payment Successful!");
         DrawText(msg, cx - MeasureText(msg, 30) / 2, cy + 80, 30, GREEN_ACC);
 
-        const char* hint = "Returning to menu...";
+        const char* hint = TextFor("Returning to menu...");
         DrawText(hint, cx - MeasureText(hint, 16) / 2, cy + 120, 16, TEXT_DIM);
         return;
     }
@@ -116,7 +117,7 @@ void PaymentScreen::Draw() {
     DrawRectangleRounded(cardRect, 0.06f, 8, CARD_BG);
     DrawRectangleRoundedLines(cardRect, 0.06f, 8, BORDER_COLOR);
 
-    const char* title = "CHECKOUT";
+    const char* title = TextFor("CHECKOUT");
     DrawText(title, cx - MeasureText(title, 34) / 2, 130, 34, TEXT_LIGHT);
 
     DrawLine(cx - 140, 175, cx + 140, 175, BORDER_COLOR);
@@ -126,12 +127,12 @@ void PaymentScreen::Draw() {
     DrawText(priceText.c_str(), cx - MeasureText(priceText.c_str(), 48) / 2, 200, 48, CYAN_ACC);
 
     const char* sub = bookingChannel == BookingChannel::Online
-        ? "Online booking: credit card only"
-        : "Walk-in booking: cash or credit card";
+        ? TextFor("Online booking: credit card only")
+        : TextFor("Walk-in booking: cash or credit card");
     DrawText(sub, cx - MeasureText(sub, 16) / 2, 260, 16, TEXT_DIM);
 
     DrawRectangleRounded(btnCreditCard, 0.4f, 8, hoverCC ? CYAN_HOVER : CYAN_ACC);
-    const char* ccText = "CREDIT CARD (Online)";
+    const char* ccText = TextFor("CREDIT CARD (Online)");
     int ccw = MeasureText(ccText, 20);
     DrawText(ccText, (int)(btnCreditCard.x + (btnCreditCard.width - ccw) / 2), (int)(btnCreditCard.y + 16), 20, DARK_BG);
 
@@ -139,14 +140,14 @@ void PaymentScreen::Draw() {
         ? (hoverCash ? PINK_HOVER : PINK_ACC)
         : BORDER_COLOR;
     DrawRectangleRounded(btnCash, 0.4f, 8, cashColor);
-    const char* cashText = "CASH (On-site)";
+    const char* cashText = TextFor("CASH (On-site)");
     int cw = MeasureText(cashText, 20);
     DrawText(cashText, (int)(btnCash.x + (btnCash.width - cw) / 2), (int)(btnCash.y + 16), 20,
         bookingChannel == BookingChannel::WalkIn ? DARK_BG : TEXT_DIM);
 
     DrawRectangleRounded(btnCancel, 0.4f, 8, hoverCancel ? GetTheme().danger : CARD_COLOR);
     DrawRectangleRoundedLines(btnCancel, 0.4f, 8, hoverCancel ? GetTheme().dangerHover : BORDER_COLOR);
-    const char* cancelText = "CANCEL";
+    const char* cancelText = TextFor("CANCEL");
     int canw = MeasureText(cancelText, 20);
     DrawText(cancelText, (int)(btnCancel.x + (btnCancel.width - canw) / 2), (int)(btnCancel.y + 14), 20,
         hoverCancel ? WHITE : TEXT_LIGHT);
